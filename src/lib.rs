@@ -46,27 +46,34 @@ make_hook!(
 extern "system" fn func_hook(param1: *const u8, param2: u64) {
     // println!("Hook: param1: {param1} {param1:#x}");
     unsafe { 
-    if param1 == 0x7ff62bce6330 as *const u8 || param1 == 0x7ff62d6fc5d0 as *const u8 {
-        HOOK_Test.call(param1, param2);
-        return;
-    }
-    }
+    HOOK_Test.call(param1, param2); 
+    let p = param1.clone();
+    match format!("{:?}", p.clone()).as_str() {
+        "0x7ff62bce6330" |
+        "0x7ff657d6c5d0" | 
+        "0x7ff6563dce50" => {
+            return;
+        }
+        _ => {}
+    };
+
     let mut s = String::new();
-    let mut p1c = param1.clone();
+    let mut p1c = param1 as isize;
     loop {
-        let c = unsafe { p1c.read() } as char;
+        let c = std::ptr::read(p1c as *const u8) as char;
         // println!("Char: {c}");
         if c == '\0' {
             break;
         }
 
         s.push(c);
-        unsafe { p1c = p1c.add(1) };
+        p1c += 1;
     }
-    println!("----------------------------\nHook: \nparam1: {param1:?} \nparam2: {param2} {param2:#x}");
+    // println!("----------------------------\nHook: \nparam1: {param1:?} \nparam2: {param2} {param2:#x}");
     println!("Component?: {s}\n-------------------\n");
     // message_box!("HOOKED", "Please", 0);
-    unsafe { HOOK_Test.call(param1, param2); }
+    }
+
 }
 
 unsafe fn enable_hooks() {
