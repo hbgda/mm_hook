@@ -12,10 +12,9 @@ use windows::{
 };
 use once_cell::sync::Lazy;
 
-// const MODULE_BASE: OnceCell<isize> =  OnceCell::new();
-// const HERO_HANDLE_OFFSET: isize =   0x05D8BD5C;
 const COMBO_PTR_OFFSET: isize = 0x77836B0;
-// const COMBO_FUNC_OFFSET: isize = 0xABEE40;
+// const POSSIBLE_HERO_ADDR: isize =  0xEDB88320;
+
 
 unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
@@ -37,48 +36,60 @@ unsafe fn get_offset_ptr_mut<T>(offset: isize) -> *mut T {
 // );
 
 make_hook!(
-    HOOK_Test, 
-    make_func!(get_offset_ptr(0x20c17c0), [*const u8, u64]),
-    func_hook,
-    [*const u8, u64]
+    HOOK_SomethingComboRelated, 
+    make_func!(get_offset_ptr(0xABFD30), [i64, i64]),
+    HOOK_SomethingComboRelated_Fn,
+    [i64, i64]
 );
 
-extern "system" fn func_hook(param1: *const u8, param2: u64) {
-    // println!("Hook: param1: {param1} {param1:#x}");
-    unsafe { 
-    HOOK_Test.call(param1, param2); 
-    let p = param1.clone();
-    match format!("{:?}", p.clone()).as_str() {
-        "0x7ff62bce6330" |
-        "0x7ff657d6c5d0" | 
-        "0x7ff6563dce50" => {
-            return;
-        }
-        _ => {}
-    };
-
-    let mut s = String::new();
-    let mut p1c = param1 as isize;
-    loop {
-        let c = std::ptr::read(p1c as *const u8) as char;
-        // println!("Char: {c}");
-        if c == '\0' {
-            break;
-        }
-
-        s.push(c);
-        p1c += 1;
-    }
-    // println!("----------------------------\nHook: \nparam1: {param1:?} \nparam2: {param2} {param2:#x}");
-    println!("Component?: {s}\n-------------------\n");
-    // message_box!("HOOKED", "Please", 0);
-    }
-
+unsafe extern "system" fn HOOK_SomethingComboRelated_Fn(param1: i64, param2: i64) {
+    println!("Hook Called: SomethingComboRelated: param1 = {param1} {param1:#x} | param2 = {param2} {param2:x}");
+    let combo_addr = param1 + 0x50;
+    let ptr = combo_addr as *mut u32;
+    let curr = ptr.read();
+    ptr.write(34);
+    println!("Changed {combo_addr:#x} to {curr} + 10");
+    // let combo_ptr = get_offset_ptr::<u32>(COMBO_PTR_OFFSET);
+    // let combo = combo_ptr.read();
+    HOOK_SomethingComboRelated.call(param1, param2);
 }
 
+// extern "system" fn func_hook(param1: *const u8, param2: u64) {
+//     // println!("Hook: param1: {param1} {param1:#x}");
+//     unsafe { 
+//     HOOK_Test.call(param1, param2); 
+//     let p = param1.clone();
+//     match format!("{:?}", p.clone()).as_str() {
+//         "0x7ff62bce6330" |
+//         "0x7ff657d6c5d0" | 
+//         "0x7ff6563dce50" => {
+//             return;
+//         }
+//         _ => {}
+//     };
+
+//     let mut s = String::new();
+//     let mut p1c = param1 as isize;
+//     loop {
+//         let c = std::ptr::read(p1c as *const u8).to_string();
+//         // println!("Char: {c}");
+//         if c == "\0" {
+//             break;
+//         }
+
+//         s.push_str(&c);
+//         p1c += 1;
+//     }
+//     // println!("----------------------------\nHook: \nparam1: {param1:?} \nparam2: {param2} {param2:#x}");
+//     println!("Component?: {s}\n-------------------\n");
+//     // message_box!("HOOKED", "Please", 0);
+//     }
+
+// }
+
 unsafe fn enable_hooks() {
-    HOOK_Test.enable()
-        .expect("Failed to enable hook: ComboFunc");
+    HOOK_SomethingComboRelated.enable()
+        .expect("Failed to enable hook: SetCombo");
 }
 
 fn init() {
@@ -92,35 +103,35 @@ fn init() {
     }
 }
 
-unsafe fn update_loop() {
-    loop {
-        // KeyCode T 0x54
-        if get_key!(0x54) {
-            let combo_ptr = get_offset_ptr::<u32>(COMBO_PTR_OFFSET);
-            let combo_curr = std::ptr::read(combo_ptr);
-            println!("Current Combo: {combo_curr}");
-        }
+// unsafe fn update_loop() {
+//     loop {
+//         // KeyCode T 0x54
+//         if get_key!(0x54) {
+//             let combo_ptr = get_offset_ptr::<u32>(COMBO_PTR_OFFSET);
+//             let combo_curr = std::ptr::read(combo_ptr);
+//             println!("Current Combo: {combo_curr}");
+//         }
 
-        if get_key!(0x59) {
-            let combo_ptr = get_offset_ptr_mut::<u32>(COMBO_PTR_OFFSET);
-            let combo_curr = std::ptr::read(combo_ptr);
-            std::ptr::write(combo_ptr, combo_curr + 10);
-            println!("Increased combo?");
-        }
+//         if get_key!(0x59) {
+//             let combo_ptr = get_offset_ptr_mut::<u32>(COMBO_PTR_OFFSET);
+//             let combo_curr = std::ptr::read(combo_ptr);
+//             std::ptr::write(combo_ptr, combo_curr + 10);
+//             println!("Increased combo?");
+//         }
 
-        // KeyCode U 0x55
-        if get_key!(0x55) {
-            message_box!("Exiting update loop.", "This should unload the DLL!", 0);
-            break;
-        }
-    }
+//         // KeyCode U 0x55
+//         if get_key!(0x55) {
+//             message_box!("Exiting update loop.", "This should unload the DLL!", 0);
+//             break;
+//         }
+//     }
 
-    DllMain(
-        HMODULE(0),
-        DLL_PROCESS_DETACH,
-        std::ptr::null::<*mut ()>() as *mut (),
-    );
-}
+//     DllMain(
+//         HMODULE(0),
+//         DLL_PROCESS_DETACH,
+//         std::ptr::null::<*mut ()>() as *mut (),
+//     );
+// }
 
 
 #[no_mangle]
