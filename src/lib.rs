@@ -13,7 +13,7 @@ use windows::{
 use once_cell::sync::Lazy;
 
 const COMBO_PTR_OFFSET: isize = 0x77836B0;
-// const POSSIBLE_HERO_ADDR: isize =  0xEDB88320;
+// const POSSIBLE_HERO_ADDR: isize =  0x3DFE9F8;
 
 
 unsafe fn get_module_base() -> isize {
