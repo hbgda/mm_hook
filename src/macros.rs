@@ -28,16 +28,34 @@ macro_rules! make_func {
 
 #[macro_export]
 macro_rules! make_hook {
-    ($id:ident, $ori:expr, $hook:expr, [$($params:ty),*]) => {
+    ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*]) => {
         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*)>> = Lazy::new(|| {
-            unsafe { GenericDetour::new($ori, $hook) }
+            unsafe { retour::GenericDetour::new($ori, $hook) }
                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
         });
     };
-    ($id:ident, $ori:expr, $hook:expr, [$($params:ty),*], $ret:ty) => {
+    ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*] => $ret:ty) => {
         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*) -> $ret>> = Lazy::new(|| {
-            unsafe { GenericDetour::new($ori, $hook) }
+            unsafe { retour::GenericDetour::new($ori, $hook) }
                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
         });
+    };
+}
+
+#[macro_export]
+macro_rules! make_type {
+    ($name:ident, $($offset:literal: $field:ident: $ty:ty),*) => {
+        paste::paste! {
+            pub struct $name(pub u64);
+            impl $name {
+                $(pub unsafe fn [<get_ $field>](&self) -> $ty { 
+                    std::ptr::read((self.0 + $offset) as *const $ty) 
+                })*
+
+                $(pub unsafe fn [<set_ $field>](&self, val: $ty) {
+                    std::ptr::write((self.0 + $offset) as *mut $ty, val)
+                })*
+            }
+        }
     };
 }
