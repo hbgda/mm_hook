@@ -28,6 +28,41 @@ macro_rules! make_func {
 
 #[macro_export]
 macro_rules! make_hook {
+    ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block) => {
+        paste::paste! {
+            #[allow(non_upper_case_globals)]
+            static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($ty,)*)>> = Lazy::new(|| {
+                unsafe {
+                    retour::GenericDetour::new($ori, [<$id _Fn>])
+                        .expect(&format!("Failed to create hook: {}", stringify!($id)))
+                }
+            });
+            #[allow(non_snake_case)]
+            unsafe extern "system" fn [<$id _Fn>]($($param: $ty)*) {
+                $code
+            }
+        }
+    };
+    ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block) => {
+        paste::paste! {
+            #[allow(non_upper_case_globals)]
+            static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = Lazy::new(|| {
+                unsafe {
+                    retour::GenericDetour::new($ori, [<$id _Fn>])
+                        .expect(&format!("Failed to create hook: {}", stringify!($id)))
+                }
+            });
+            #[allow(non_snake_case)]
+            unsafe extern "system" fn [<$id _Fn>]($($param: $ty)*) -> $ret {
+                $code
+            }
+        }
+    };
+}
+
+/// Old
+#[macro_export]
+macro_rules! make_hook_1 {
     ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*]) => {
         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*)>> = Lazy::new(|| {
             unsafe { retour::GenericDetour::new($ori, $hook) }
@@ -44,7 +79,7 @@ macro_rules! make_hook {
 
 #[macro_export]
 macro_rules! make_type {
-    ($name:ident, $($offset:literal: $field:ident: $ty:ty),*) => {
+    ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*]) => {
         paste::paste! {
             pub struct $name(pub u64);
             impl $name {
@@ -58,4 +93,15 @@ macro_rules! make_type {
             }
         }
     };
+    ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*], $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
+        make_type!($name, [$($offset => $field: $ty)*]);
+        impl $name {
+            $(pub unsafe fn $fn(&self, $($param: $paramty)*) -> $ret {
+                $crate::make_func!(self.0 + $fn_offset, [$($paramty)*], $ret)($($param)*)
+            })*
+        }
+    };
+    ($name:ident, $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
+        make_type!($name, [], $($fn_offset => $fn($($param: $paramty)*): $ret)*);
+    }
 }
