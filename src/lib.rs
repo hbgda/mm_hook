@@ -1,7 +1,7 @@
 pub mod macros;
 pub mod game;
 
-use std::{ffi::{c_char, CString, CStr}, thread};
+use std::{ffi::{c_char, CString, CStr}, thread, time::Duration};
 
 use game::entity::Entity;
 use windows::{
@@ -15,7 +15,7 @@ use windows::{
 };
 use once_cell::sync::Lazy;
 
-use crate::game::{hero::HeroHealth, OFFSET_HERO_HANDLE_PTR, OFFSET_PLAYERHUDMESSAGE_PTR};
+use crate::game::{hero::HeroHealth, OFFSET_HERO_HANDLE_PTR, OFFSET_PLAYERHUDMESSAGE_PTR, hud::MessageType};
 
 unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
@@ -52,10 +52,10 @@ make_hook!(
 
 make_hook!(
     HOOK_Something,
-    make_func!(get_offset_ptr(0x8eef60), [u64]),
-    (thing: u64) => {
-        println!("Thing: {thing:#x}");
-        HOOK_Something.call(thing);
+    make_func!(get_offset_ptr(0x8e6ab0), [u64, i32, u64, u32], u64),
+    (p1: u64, p2: i32, p3: u64, p4: u32): u64 => {
+        println!("{p1:#x} {p2:#x} {p3:#x} {p4:#x}");
+        HOOK_Something.call(p1, p2, p3, p4)
     }
 );
 
@@ -98,21 +98,22 @@ unsafe fn update_loop() {
             println!("{hero:#x?}");
             let hero_name = hero.name().expect("Not good");
             println!("{hero_name}");
+            game::hud::show_message("Testing hud stuff\0", MessageType::CenterLower, Duration::from_secs(3));
+            game::hud::show_message("Left Box? [BTN_X]", MessageType::LeftBox, Duration::from_secs(3));
 
-            let hero_health = match hero.get_component("HeroHealth") {
-                Some(handle) => handle,
-                None => { 
-                    println!("Failed to get component.");
-                    continue 
-                }
-            };
+            // let hero_health = match hero.get_component("HeroHealth") {
+            //     Some(handle) => handle,
+            //     None => { 
+            //         println!("Failed to get component.");
+            //         continue 
+            //     }
+            // };
 
-            let mut hero_health = &mut *(hero_health as *mut HeroHealth);
-            println!("HeroHealth: {:p}", hero_health);
-            println!("HeroHealth::current_health = {} | {:p}", hero_health.current_health, &hero_health.current_health);
-            println!("HeroHealth::max_health = {} | {:p}", hero_health.max_health, &hero_health.max_health);
+            // let mut hero_health = &mut *(hero_health as *mut HeroHealth);
+            // println!("HeroHealth: {:p}", hero_health);
+            // println!("HeroHealth::current_health = {} | {:p}", hero_health.current_health, &hero_health.current_health);
+            // println!("HeroHealth::max_health = {} | {:p}", hero_health.max_health, &hero_health.max_health);
 
-            let phm = get_offset(OFFSET_PLAYERHUDMESSAGE_PTR);
             // ((phm + 0x2c) as *mut u8).write(0);
             // let thing = make_func!(get_offset_ptr(0x8eff10), [*const u64]);
             // thing(std::ptr::addr_of!(phm) as *const u64);
