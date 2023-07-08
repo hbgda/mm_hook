@@ -1,7 +1,7 @@
 pub mod macros;
-pub mod hero;
+pub mod game;
 
-use std::ffi::{c_char, CString};
+use std::{ffi::{c_char, CString, CStr}, thread};
 
 use windows::{
     core::*, 
@@ -18,12 +18,20 @@ unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
 }
 
+unsafe fn get_offset(offset: isize) -> isize {
+    get_module_base() + offset
+}
+
 unsafe fn get_offset_ptr<T>(offset: isize) -> *const T {
     (get_module_base() + offset) as *const T
 }
 
 unsafe fn get_offset_ptr_mut<T>(offset: isize) -> *mut T {
     (get_module_base() + offset) as *mut T
+}
+
+pub trait GameType {
+    fn from(handle: u64) -> Self;
 }
 
 make_hook!(
@@ -48,6 +56,16 @@ make_hook!(
 );
 
 make_hook!(
+    HOOK_GetEntity,
+    make_func!(get_offset_ptr(game::OFFSET_GET_ENTITY_FN), [*const u64], u64),
+    (handle_ptr: *const u64): u64 => {
+        let entity = HOOK_GetEntity.call(handle_ptr);
+        // println!("Entity Handle: {:#x}", handle_ptr.read());
+        // println!("Entity: {entity:#x}");
+        entity
+    }
+);
+make_hook!(
     HOOK_Test,
     make_func!(0x123, [], u64),
     (): u64 => {
@@ -68,6 +86,9 @@ unsafe fn enable_hooks() {
 
     HOOK_PlayerHudMessage_Init.enable()
         .expect("Failed to enable hook: PlayerHudMessage::Init()");
+
+    HOOK_GetEntity.enable()
+        .expect("Failed to enable hook: GetEntity()");
 }
 
 fn init() {
@@ -76,6 +97,7 @@ fn init() {
         println!("Injected!");
 
         enable_hooks();
+        thread::spawn(|| update_loop());
     }
 }
 
@@ -84,6 +106,15 @@ unsafe fn update_loop() {
         // KeyCode T 0x54
         if get_key!(0x54) {
             // let create_msg = make_func!(get_offset_ptr(0x8e77c0), []);
+            let hero = game::get_hero_entity();
+            println!("{hero:#x?}");
+            let hero_name = CStr::from_ptr(((hero + 0xB0) as *const u64).read() as *const i8).to_str().expect("Fuck");
+            println!("{hero_name}");
+
+            // let hero = game::get_hero();
+            // println!("Hero: {hero:#x}");
+            // let hero_name = game::get_entity_name(hero).expect("Fuck");
+            // println!("Hero: {hero:#x} | {hero_name}");
         }
 
         // KeyCode U 0x55

@@ -1,5 +1,15 @@
 use crate::make_type;
 
+pub struct HeroHealthRaw {
+    // 0x0
+    pub vftable: *const u64,
+    // 0x8
+    pub _buf: [u8; 0x71],
+    // 0x80
+    pub max_health: u64,
+
+}
+
 make_type!(
     HeroHealth,
     [
