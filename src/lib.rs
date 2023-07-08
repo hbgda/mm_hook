@@ -14,7 +14,7 @@ use windows::{
 };
 use once_cell::sync::Lazy;
 
-use crate::game::hero::HeroHealthRaw;
+use crate::game::hero::HeroHealth;
 
 unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
@@ -60,10 +60,10 @@ unsafe fn update_loop() {
         if get_key!(0x54) {
             let hero = game::hero::get_hero_entity();
             println!("{hero:#x?}");
-            let hero_name = game::entity::get_entity_name(hero).expect("Bad");
+            let hero_name = hero.name().expect("Not good");
             println!("{hero_name}");
 
-            let hero_health = match game::entity::get_component_by_name(hero, "HeroHealth") {
+            let hero_health = match hero.get_component("HeroHealth") {
                 Some(handle) => handle,
                 None => { 
                     println!("Failed to get component.");
@@ -73,7 +73,7 @@ unsafe fn update_loop() {
 
             println!("HeroHealth: {hero_health:#x}");
 
-            let mut hero_health = &mut *(hero_health as *mut HeroHealthRaw);
+            let mut hero_health = &mut *(hero_health as *mut HeroHealth);
             println!("HeroHealth: {:p}", hero_health);
             println!("HeroHealth::current_health = {} | {:p}", hero_health.current_health, &hero_health.current_health);
             println!("HeroHealth::max_health = {} | {:p}", hero_health.max_health, &hero_health.max_health);
