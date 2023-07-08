@@ -14,6 +14,8 @@ use windows::{
 };
 use once_cell::sync::Lazy;
 
+use crate::game::hero::HeroHealthRaw;
+
 unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
 }
@@ -30,9 +32,16 @@ unsafe fn get_offset_ptr_mut<T>(offset: isize) -> *mut T {
     (get_module_base() + offset) as *mut T
 }
 
-pub trait GameType {
-    fn from(handle: u64) -> Self;
-}
+make_hook!(
+    HOOK_GetEntity,
+    make_func!(get_offset_ptr(game::OFFSET_GET_ENTITY_FN), [*const u64], u64),
+    (handle_ptr: *const u64): u64 => {
+        let entity = HOOK_GetEntity.call(handle_ptr);
+        // println!("Entity Handle: {:#x}", handle_ptr.read());
+        // println!("Entity: {entity:#x}");
+        entity
+    }
+);
 
 make_hook!(
     HOOK_HeroHealth_Init,
@@ -45,71 +54,30 @@ make_hook!(
     }
 );
 
-make_hook!(
-    HOOK_PlayerHudMessage_Init,
-    make_func!(get_offset_ptr(0x8e8220), [u64]),
-    (this: u64) => {
-        HOOK_PlayerHudMessage_Init.call(this);
-        println!("PlayerHudMessage: {:#x}", this);
-        std::ptr::write((this + 0x18) as *mut CString, CString::new("Testing").unwrap())
-    }
-);
-
-make_hook!(
-    HOOK_GetEntity,
-    make_func!(get_offset_ptr(game::OFFSET_GET_ENTITY_FN), [*const u64], u64),
-    (handle_ptr: *const u64): u64 => {
-        let entity = HOOK_GetEntity.call(handle_ptr);
-        // println!("Entity Handle: {:#x}", handle_ptr.read());
-        // println!("Entity: {entity:#x}");
-        entity
-    }
-);
-make_hook!(
-    HOOK_Test,
-    make_func!(0x123, [], u64),
-    (): u64 => {
-        0
-    }
-);
-
-// unsafe extern "system" fn HOOK_HeroHealth_Init_Fn(this: u64) {
-//     HOOK_HeroHealth_Init.call(this);
-//     let hero_health = hero::HeroHealth(this);
-//     println!("HeroHealth = {:#x}", this);
-//     println!("HeroHealth::max_health = {}", hero_health.get_max_health());
-// }
-
-unsafe fn enable_hooks() {
-    HOOK_HeroHealth_Init.enable()
-        .expect("Failed to enable hook: HeroHealth::Init()");
-
-    HOOK_PlayerHudMessage_Init.enable()
-        .expect("Failed to enable hook: PlayerHudMessage::Init()");
-
-    HOOK_GetEntity.enable()
-        .expect("Failed to enable hook: GetEntity()");
-}
-
-fn init() {
-    unsafe {
-        AllocConsole();
-        println!("Injected!");
-
-        enable_hooks();
-        thread::spawn(|| update_loop());
-    }
-}
-
 unsafe fn update_loop() {
     loop {
         // KeyCode T 0x54
         if get_key!(0x54) {
-            // let create_msg = make_func!(get_offset_ptr(0x8e77c0), []);
-            let hero = game::get_hero_entity();
+            let hero = game::hero::get_hero_entity();
             println!("{hero:#x?}");
-            let hero_name = CStr::from_ptr(((hero + 0xB0) as *const u64).read() as *const i8).to_str().expect("Fuck");
+            let hero_name = game::entity::get_entity_name(hero).expect("Bad");
             println!("{hero_name}");
+
+            let hero_health = match game::entity::get_component_by_name(hero, "HeroHealth") {
+                Some(handle) => handle,
+                None => { 
+                    println!("Failed to get component.");
+                    continue 
+                }
+            };
+
+            println!("HeroHealth: {hero_health:#x}");
+
+            let mut hero_health = &mut *(hero_health as *mut HeroHealthRaw);
+            println!("HeroHealth: {:p}", hero_health);
+            println!("HeroHealth::current_health = {} | {:p}", hero_health.current_health, &hero_health.current_health);
+            println!("HeroHealth::max_health = {} | {:p}", hero_health.max_health, &hero_health.max_health);
+            hero_health.max_health += 100f32;
 
             // let hero = game::get_hero();
             // println!("Hero: {hero:#x}");
@@ -126,6 +94,27 @@ unsafe fn update_loop() {
     panic!();
 }
 
+
+unsafe fn enable_hooks() {
+    HOOK_HeroHealth_Init.enable()
+        .expect("Failed to enable hook: HeroHealth::Init()");
+
+    // HOOK_PlayerHudMessage_Init.enable()
+    //     .expect("Failed to enable hook: PlayerHudMessage::Init()");
+
+    // HOOK_GetEntity.enable()
+    //     .expect("Failed to enable hook: GetEntity()");
+}
+
+fn init() {
+    unsafe {
+        AllocConsole();
+        println!("Injected!");
+
+        enable_hooks();
+        thread::spawn(|| update_loop());
+    }
+}
 
 #[no_mangle]
 #[allow(non_snake_case)]

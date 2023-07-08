@@ -91,11 +91,6 @@ macro_rules! make_type {
                     std::ptr::write((self.0 + $offset) as *mut $ty, val)
                 })*
             }
-            impl $crate::GameType for $name {
-                fn from(handle: u64) -> $name {
-                    $name(handle)
-                }
-            }
         }
     };
     ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*], $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
