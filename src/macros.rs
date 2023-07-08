@@ -38,7 +38,7 @@ macro_rules! make_hook {
                 }
             });
             #[allow(non_snake_case)]
-            unsafe extern "system" fn [<$id _Fn>]($($param: $ty)*) {
+            unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) {
                 $code
             }
         }
@@ -53,7 +53,7 @@ macro_rules! make_hook {
                 }
             });
             #[allow(non_snake_case)]
-            unsafe extern "system" fn [<$id _Fn>]($($param: $ty)*) -> $ret {
+            unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
                 $code
             }
         }
