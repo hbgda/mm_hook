@@ -36,19 +36,19 @@ unsafe fn get_offset_ptr_mut<T>(offset: isize) -> *mut T {
 
 // 0x7ff74ba1ae2c
 
-make_hook!(
-    HOOK_GetEntity,
-    make_func!(get_offset_ptr(game::OFFSET_GET_ENTITY_FN), [*const u64], u64),
-    (handle_ptr: *const u64): u64 => {
-        let entity = HOOK_GetEntity.call(handle_ptr);
-        // if entity != 0 && Entity(entity).name() == Ok("Spider-Man") {
-        //     println!("{:#x}", handle_ptr as isize - get_module_base());
-        // }
-        // println!("Entity Handle: {:#x}", handle_ptr.read());
-        // println!("Entity: {entity:#x}");
-        entity
-    }
-);
+// make_hook!(
+//     HOOK_GetEntity,
+//     make_func!(get_offset_ptr(game::OFFSET_GET_ENTITY_FN), [*const u64], u64),
+//     (handle_ptr: *const u64): u64 => {
+//         let entity = HOOK_GetEntity.call(handle_ptr);
+//         // if entity != 0 && Entity(entity).name() == Ok("Spider-Man") {
+//         //     println!("{:#x}", handle_ptr as isize - get_module_base());
+//         // }
+//         // println!("Entity Handle: {:#x}", handle_ptr.read());
+//         // println!("Entity: {entity:#x}");
+//         entity
+//     }
+// );
 
 make_hook!(
     HOOK_Something,

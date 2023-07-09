@@ -1,6 +1,8 @@
 use std::{ffi::CStr, str::Utf8Error, ops::{Deref, DerefMut}};
 
-use super::OFFSET_GET_ENTITY_FN;
+use crate::make_func_static;
+
+make_func_static!(0x1AA8630, GET_ENTITY(*const u64): u64);
 
 // Entity Structure
 // 0x68: ComponentList
@@ -11,8 +13,7 @@ use super::OFFSET_GET_ENTITY_FN;
 pub struct Entity(pub u64);
 impl Entity {
     pub unsafe fn get(handle_ptr: *const u64) -> Option<Entity> {
-        let func = crate::make_func!(crate::get_offset_ptr(OFFSET_GET_ENTITY_FN), [*const u64], u64);
-        match func(handle_ptr) {
+        match GET_ENTITY(handle_ptr) {
             0 => None,
             entity => Some(Entity(entity))
         }

@@ -10,6 +10,5 @@ pub mod hud;
 
 
 // TODO: Pattern Scanning for offsets
-pub(crate) const OFFSET_GET_ENTITY_FN: isize = 0x1AA8630;
 pub(crate) const OFFSET_HERO_HANDLE_PTR: isize = 0x66EAE2C;
 pub(crate) const OFFSET_PLAYERHUDMESSAGE_PTR: isize = 0x777D7E0;
