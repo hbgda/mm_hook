@@ -19,7 +19,7 @@ macro_rules! get_key {
 #[macro_export]
 macro_rules! make_func {
     ($addr:expr, [$($params:ty),*]) => {
-        std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*)>($addr as _)
+        make_func!($addr, [$($params),*], ())
     };
     ($addr:expr, [$($params:ty),*], $ret:ty) => {
         std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*) -> $ret>($addr as _)
@@ -30,7 +30,7 @@ macro_rules! make_func {
 /// Must be used in a lazy_static! block
 macro_rules! make_func_static {
     ($offset:literal, $name:ident ($($params:ty),*)) => {
-        make_func_static!($offset, $name ($($params),*): ());
+        make_func_static!($offset, $name ($($params),*): ())
     };
     ($offset:literal, $name:ident ($($params:ty),*): $ret:ty) => {
         static $name: once_cell::sync::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = once_cell::sync::Lazy::new(|| unsafe { $crate::make_func!($crate::get_offset_ptr($offset), [$($params),*], $ret) });
@@ -40,19 +40,7 @@ macro_rules! make_func_static {
 #[macro_export]
 macro_rules! make_hook {
     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block) => {
-        paste::paste! {
-            #[allow(non_upper_case_globals)]
-            static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($ty,)*)>> = Lazy::new(|| {
-                unsafe {
-                    retour::GenericDetour::new($ori, [<$id _Fn>])
-                        .expect(&format!("Failed to create hook: {}", stringify!($id)))
-                }
-            });
-            #[allow(non_snake_case)]
-            unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) {
-                $code
-            }
-        }
+        make_hook!($id, $ori, ($($param: $ty),*): () => $code);
     };
     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block) => {
         paste::paste! {
