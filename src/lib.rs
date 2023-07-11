@@ -12,10 +12,11 @@ use windows::{
     Win32::System::SystemServices::*, 
     Win32::UI::Input::KeyboardAndMouse::*, 
     Win32::UI::WindowsAndMessaging::*,
+    Win32::System::Threading::*
 };
 use once_cell::sync::Lazy;
 
-use crate::game::{hero::HeroHealth, OFFSET_HERO_HANDLE_PTR, OFFSET_PLAYERHUDMESSAGE_PTR, hud::MessageType};
+use crate::game::{hero::HeroHealth, OFFSET_HERO_HANDLE_PTR, OFFSET_PLAYERHUDMESSAGE, hud::MessageType};
 
 unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0
@@ -90,16 +91,57 @@ make_hook!(
     }
 );
 
+make_hook!(
+    HOOK_LoadConfigSystem,
+    make_func!(get_offset_ptr(0x1b9e7c0), [u64, u64, u64, *const u8, u64], u64),
+    (asset_manager: u64, config: u64, idk: u64, system: *const u8, idk2: u64): u64 => {
+        println!("{config:#x}");
+        HOOK_LoadConfigSystem.call(asset_manager, config, idk, system, idk2)
+    }
+);
+
+make_hook!(
+    HOOK_LoadConfigThing,
+    make_func!(get_offset_ptr(0x1b305f0), [*const u64, u64, u64, *const u8, u64, *const u8, u64], *const u8),
+    (asset_manager: *const u64, config: u64, idk: u64, idk2: *const u8, idk3: u64, system_type: *const u8, idk4: u64): *const u8 => {
+        let ret = HOOK_LoadConfigThing.call(asset_manager, config, idk, idk2, idk3, system_type, idk4);
+        println!("ConfigThing: {:?}", CStr::from_ptr(ret as *const i8).to_str().unwrap());
+        ret
+    }
+);
+
+make_hook!(
+    HOOK_MissionAbandon_CreatePopup,
+    make_func!(get_offset_ptr(0x9414d0), [u64]),
+    (this: u64) => {
+        println!("{this:#x}");
+        HOOK_MissionAbandon_CreatePopup.call(this);
+    }
+);
+
+make_hook!(
+    HOOK_SetMember,
+    make_func!(get_offset_ptr(0x3a4a4c0), [u64, *const u64, *const u8, u64]),
+    (this: u64, idk: *const u64, member: *const u8, thing: u64) => {
+        println!("{this:#x} {idk:p} {} {thing:#x}", CStr::from_ptr(member as *const i8).to_str().unwrap());
+        HOOK_SetMember.call(this, idk, member, thing);
+    }
+);
+
 unsafe fn update_loop() {
     loop {
         // KeyCode T 0x54
         if get_key!(0x54) {
             let hero = game::hero::get_hero_entity().expect("Sad");
             println!("{hero:#x?}");
-            let hero_name = hero.name().expect("Not good");
-            println!("{hero_name}");
-            game::hud::show_message("Testing hud stuff\0", MessageType::CenterLower, Duration::from_secs(3));
-            game::hud::show_message("Left Box? [BTN_X]", MessageType::LeftBox, Duration::from_secs(3));
+            let hero_transform = hero.transform();
+            let mut hero_pos = hero_transform.position;
+            hero_pos.y += 5f32;
+            hero_transform.set_position(hero_pos);
+            // let hero_name = hero.name().expect("Not good");
+            // println!("{hero_name}");
+            game::hud::show_message("Testing hud stuff\0", MessageType::CenterLower, Some(Duration::from_secs(3)));
+            game::hud::show_message("<bold><u>Header</u></bold> [BTN_X]\nTest\0", MessageType::LeftBox, Some(Duration::from_secs(3)));
 
             // let hero_health = match hero.get_component("HeroHealth") {
             //     Some(handle) => handle,
@@ -134,20 +176,32 @@ unsafe fn update_loop() {
 
 
 unsafe fn enable_hooks() {
-    HOOK_HeroHealth_Init.enable()
-        .expect("Failed to enable hook: HeroHealth::Init()");
+    // HOOK_HeroHealth_Init.enable()
+    //     .expect("Failed to enable hook: HeroHealth::Init()");
 
-    HOOK_PlayerHudMessage_Init.enable()
-        .expect("Failed to enable hook: PlayerHudMessage::Init()");
+    // HOOK_PlayerHudMessage_Init.enable()
+    //     .expect("Failed to enable hook: PlayerHudMessage::Init()");
 
-    HOOK_ShowMessage.enable()
-        .expect("Failed to enable hook: ShowMessage()");
+    // HOOK_ShowMessage.enable()
+    //     .expect("Failed to enable hook: ShowMessage()");
 
-    HOOK_Something.enable()
-        .expect("Failed to enable hook: Something()");
+    // HOOK_Something.enable()
+    //     .expect("Failed to enable hook: Something()");
 
     // HOOK_GetEntity.enable()
     //     .expect("Failed to enable hook: GetEntity()");
+
+    // HOOK_LoadConfigSystem.enable()
+    //     .expect("Failed to enable hook: LoadConfigSystem");
+
+    // HOOK_LoadConfigThing.enable()
+    //     .expect("Failed to enable hook: LoadConfigThing()");
+
+    // HOOK_MissionAbandon_CreatePopup.enable()
+    //     .expect("Fucking idk");
+
+    // HOOK_SetMember.enable()
+    //     .expect("SSSSSS");
 }
 
 fn init() {

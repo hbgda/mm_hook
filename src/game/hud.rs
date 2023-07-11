@@ -1,7 +1,7 @@
 use std::time::Duration;
 use once_cell::sync::Lazy;
 
-use super::OFFSET_PLAYERHUDMESSAGE_PTR;
+use super::OFFSET_PLAYERHUDMESSAGE;
 use crate::{make_func_static, get_offset_ptr};
 
 #[derive(Clone)]
@@ -33,14 +33,22 @@ impl Into<u32> for MessageType {
 make_func_static!(0x8E5890, CREATE_MESSAGE(u64, u32, *const u8, u32, u32, u32, u8, u8): u64);
 make_func_static!(0x8E6AB0, CLEAR_MESSAGE(u64, u32, *const u8, u32): u32);
 
-pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Duration) {
-    let phm = crate::get_offset(OFFSET_PLAYERHUDMESSAGE_PTR) as u64;
-    let msg_type: u32 = message_type.into();
-    // let create = crate::make_func!(crate::get_offset_ptr(0x8e5890), [u64, u32, *const u8, u32, u32, u32, u8, u8], u64);
-    CREATE_MESSAGE(phm, msg_type, message.as_ptr(), 0, 0, 0, 0, 1);
-    std::thread::spawn(move || {
-        // let clear = crate::make_func!(crate::get_offset_ptr(0x8e6ab0), [u64, u32, *const u8, u32], u32);
-        std::thread::sleep(duration);
-        CLEAR_MESSAGE(phm, msg_type, message.as_ptr(), 0);
-    });
+pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Option<Duration>) {
+    create_message(message, message_type.clone());
+    if let Some(duration) = duration {
+        std::thread::spawn(move || {
+            std::thread::sleep(duration);
+            clear_message(message, message_type);
+        });
+    }
+}
+
+pub unsafe fn create_message(message: &'static str, message_type: MessageType) {
+    let phm = crate::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    CREATE_MESSAGE(phm, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1);
+}
+
+pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
+    let phm = crate::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    CLEAR_MESSAGE(phm, message_type.into(), message.as_ptr(), 0);
 }

@@ -8,3 +8,5 @@ Component Names stored at + 0x50 of somewhere?
 
 0x3DFE9F8 - Potential Hero Pointer / or hero component list???
 Seems that Component + 0x48 -> Location in hero components
+
+GUIComponentVFTable + 0x8 = function return component name
