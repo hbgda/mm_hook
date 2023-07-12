@@ -136,7 +136,9 @@ unsafe fn update_loop() {
             println!("{hero:#x?}");
             let hero_name = hero.get_name().expect("Failed to get hero name");
             println!("{hero_name}");
+
             let hero_transform = hero.get_transform_mut();
+            println!("Hero Position: {:?} | Hero Scale: {:?}", hero_transform.get_position(), hero_transform.get_scale());
             let mut position = hero_transform.get_position();
             position.y += 100f32;
             hero_transform.set_position(&position);
@@ -156,14 +158,6 @@ unsafe fn update_loop() {
             // println!("HeroHealth: {:p}", hero_health);
             // println!("HeroHealth::current_health = {} | {:p}", hero_health.current_health, &hero_health.current_health);
             // println!("HeroHealth::max_health = {} | {:p}", hero_health.max_health, &hero_health.max_health);
-
-            // ((phm + 0x2c) as *mut u8).write(0);
-            // let thing = make_func!(get_offset_ptr(0x8eff10), [*const u64]);
-            // thing(std::ptr::addr_of!(phm) as *const u64);
-            // let show_message = make_func!(get_offset_ptr(0x8ebab0), [u64, i32, u64, u64, u64, u8, u64, f32, f32, *const i32], u8);
-            // dbg!(show_message(phm as u64, 14, "Testing".as_ptr() as u64, 0, 0, 1, 0, 0f32, 0xbf800000u32 as f32, 0 as *const i32));
-            // let show_message = make_func!(get_offset_ptr(0x8e5890), [u64, u32, *const u8, u32, u32, u32, u8, u8], u64);
-            // show_message(phm as u64, 14, "Testing0\0".as_ptr(), 0x3ff, 0, 0, 1, 1);
         }
 
         // KeyCode U 0x55

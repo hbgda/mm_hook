@@ -1,8 +1,7 @@
 use std::time::Duration;
-use once_cell::sync::Lazy;
 
 use super::OFFSET_PLAYERHUDMESSAGE;
-use crate::{make_func_static, get_offset_ptr};
+use crate::make_func_static;
 
 #[derive(Clone)]
 pub enum MessageType {
@@ -25,7 +24,6 @@ impl Into<u32> for MessageType {
             Self::CenterUpper => 18,
             Self::LeftBox => 20,
             Self::ShowFNSMReminder => 21,
-            _ => 0
         }
     }
 }

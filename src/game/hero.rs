@@ -1,4 +1,4 @@
-use crate::{make_type, get_offset_ptr};
+use crate::get_offset_ptr;
 
 use super::{entity::{Entity, self}, OFFSET_HERO_HANDLE_PTR};
 
@@ -22,24 +22,3 @@ pub struct HeroHealth {
     // 0x88
     pub current_health: f32
 }
-
-make_type!(
-    _HeroHealth,
-    [
-        0x80 => max_health: u64,
-        0x88 => current_health: u64
-    ]
-);
-
-make_type!(
-    Test,
-    [
-        0x1 => var: u64
-    ],
-    0x0 => init(this: u64): ()
-);
-
-make_type!(
-    TestFns,
-    0x0 => init(this: u64): ()
-);

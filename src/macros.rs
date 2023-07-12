@@ -27,7 +27,6 @@ macro_rules! make_func {
 }
 
 #[macro_export]
-/// Must be used in a lazy_static! block
 macro_rules! make_func_static {
     ($offset:literal, $name:ident ($($params:ty),*)) => {
         make_func_static!($offset, $name ($($params),*): ());
