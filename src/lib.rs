@@ -132,16 +132,17 @@ unsafe fn update_loop() {
     loop {
         // KeyCode T 0x54
         if get_key!(0x54) {
-            let hero = game::hero::get_hero_entity().expect("Sad");
+            let hero = game::hero::get_hero_entity().expect("Failed to get hero entity.");
             println!("{hero:#x?}");
-            let hero_transform = hero.transform();
-            let mut hero_pos = hero_transform.position;
-            hero_pos.y += 5f32;
-            hero_transform.set_position(hero_pos);
-            // let hero_name = hero.name().expect("Not good");
-            // println!("{hero_name}");
-            game::hud::show_message("Testing hud stuff\0", MessageType::CenterLower, Some(Duration::from_secs(3)));
-            game::hud::show_message("<bold><u>Header</u></bold> [BTN_X]\nTest\0", MessageType::LeftBox, Some(Duration::from_secs(3)));
+            let hero_name = hero.get_name().expect("Failed to get hero name");
+            println!("{hero_name}");
+            let hero_transform = hero.get_transform_mut();
+            let mut position = hero_transform.get_position();
+            position.y += 100f32;
+            hero_transform.set_position(&position);
+
+            // game::hud::show_message("Testing hud stuff\0", MessageType::CenterLower, Some(Duration::from_secs(3)));
+            // game::hud::show_message("<bold><u>Header</u></bold> [BTN_X]\nTest\0", MessageType::LeftBox, Some(Duration::from_secs(3)));
 
             // let hero_health = match hero.get_component("HeroHealth") {
             //     Some(handle) => handle,
