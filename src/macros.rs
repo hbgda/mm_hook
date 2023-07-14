@@ -118,3 +118,11 @@ macro_rules! load_library_func {
         });
     };
 }
+
+#[macro_export]
+macro_rules! make_logger {
+    ($mod_info:expr) => {
+        #[allow(non_upper_case_globals)]
+        const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| $crate::logging::Logger { mod_info: $mod_info });
+    };
+}

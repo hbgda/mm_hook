@@ -1,7 +1,7 @@
 use crate::{CModInfo, load_library_func};
 
 pub struct Logger {
-    mod_info: CModInfo
+    pub mod_info: CModInfo
 }
 
 // const LOG: crate::Lazy<extern "system" fn(*const u8)> = crate::Lazy::new(|| unsafe {
