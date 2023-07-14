@@ -1,8 +1,9 @@
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{c_char, CString};
 
 pub mod macros;
 pub mod game;
 pub mod utils;
+pub mod logging;
 
 pub use {
     windows::{s, Win32::{
@@ -11,7 +12,10 @@ pub use {
             Input::KeyboardAndMouse::*
         },
         Foundation::*,
-        System::SystemServices::*
+        System::{
+            SystemServices::*,
+            LibraryLoader::*,
+        }
     }},
     once_cell::sync::Lazy,
     paste::paste,

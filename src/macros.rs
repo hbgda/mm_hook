@@ -103,3 +103,18 @@ macro_rules! make_type {
         $crate::make_type!($name, [], $($fn_offset => $fn($($param: $paramty)*): $ret)*);
     }
 }
+
+#[macro_export]
+macro_rules! load_library_func {
+    ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*)) => {
+        $crate::load_library_func!($module, $module_fn, $fn ($($ty),*): ());
+    };
+    ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*): $ret:ty) => {
+        const $fn: $crate::Lazy<extern "system" fn($($ty,)*)> = $crate::Lazy::new(|| unsafe {
+            std::mem::transmute::<_, extern "system" fn($($ty,)*)>($crate::GetProcAddress(
+                $crate::HMODULE($crate::GetModuleHandleA($crate::s!($module)).unwrap().0),
+                $crate::s!($module_fn)
+            ).unwrap())
+        });
+    };
+}
