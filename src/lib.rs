@@ -4,6 +4,20 @@ pub mod macros;
 pub mod game;
 pub mod utils;
 
+pub use {
+    windows::{s, Win32::{
+        UI::{
+            WindowsAndMessaging::*,
+            Input::KeyboardAndMouse::*
+        },
+        Foundation::*,
+        System::SystemServices::*
+    }},
+    once_cell::sync::Lazy,
+    paste::paste,
+    retour::GenericDetour
+};
+
 #[repr(C)]
 pub struct ModInfo {
     pub title: &'static str,
