@@ -1,4 +1,4 @@
-use crate::get_offset_ptr;
+use crate::utils::get_offset_ptr;
 
 use super::{entity::{Entity, self}, OFFSET_HERO_HANDLE_PTR};
 

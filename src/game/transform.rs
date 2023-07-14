@@ -13,7 +13,7 @@ pub struct Vector3 {
 pub struct Transform {
     _0x0: [u8; 0x2F],
     position: Vector3,
-    _0x39: [u8; 0x36],
+    _0x39: [u8; 0x37],
     scale: Vector3
 }
 

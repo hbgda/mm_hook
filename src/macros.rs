@@ -1,8 +1,21 @@
+pub use {
+    windows::{s, Win32::{
+        UI::{
+            WindowsAndMessaging::*,
+            Input::KeyboardAndMouse::*
+        },
+        Foundation::*
+    }},
+    once_cell::sync::Lazy,
+    paste::paste,
+    retour::GenericDetour
+};
+
 #[macro_export]
 macro_rules! message_box {
     ($title:expr, $content:expr, $style:expr) => {
         unsafe {
-            MessageBoxA(HWND(0), s!($content), s!($title), MESSAGEBOX_STYLE($style))
+            $crate::macros::MessageBoxA($crate::macros::HWND(0), $crate::macros::s!($content), $crate::macros::s!($title), $crate::macros::MESSAGEBOX_STYLE($style))
         }
     };
 }
@@ -11,7 +24,7 @@ macro_rules! message_box {
 macro_rules! get_key {
     ($key:expr) => {
         unsafe {
-            GetAsyncKeyState($key) & 1 == 1
+            $crate::macros::GetAsyncKeyState($key) & 1 == 1
         }
     };
 }
@@ -19,7 +32,7 @@ macro_rules! get_key {
 #[macro_export]
 macro_rules! make_func {
     ($addr:expr, [$($params:ty),*]) => {
-        make_func!($addr, [$($params),*], ())
+        $crate::make_func!($addr, [$($params),*], ())
     };
     ($addr:expr, [$($params:ty),*], $ret:ty) => {
         std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*) -> $ret>($addr as _)
@@ -29,24 +42,24 @@ macro_rules! make_func {
 #[macro_export]
 macro_rules! make_func_static {
     ($offset:expr, $name:ident ($($params:ty),*)) => {
-        make_func_static!($offset, $name ($($params),*): ());
+        $crate::make_func_static!($offset, $name ($($params),*): ());
     };
     ($offset:expr, $name:ident ($($params:ty),*): $ret:ty) => {
-        static $name: once_cell::sync::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = once_cell::sync::Lazy::new(|| unsafe { $crate::make_func!($crate::get_offset_ptr($offset), [$($params),*], $ret) });
+        static $name: $crate::macros::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::macros::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), [$($params),*], $ret) });
     };
 }
 
 #[macro_export]
 macro_rules! make_hook {
     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block) => {
-        make_hook!($id, $ori, ($($param: $ty),*): () => $code);
+        $crate::make_hook!($id, $ori, ($($param: $ty),*): () => $code);
     };
     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block) => {
-        paste::paste! {
+        $crate::macros::paste! {
             #[allow(non_upper_case_globals)]
-            static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = Lazy::new(|| {
+            static $id: $crate::macros::Lazy<$crate::macros::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::macros::Lazy::new(|| {
                 unsafe {
-                    retour::GenericDetour::new($ori, [<$id _Fn>])
+                    $crate::macros::GenericDetour::new($ori, [<$id _Fn>])
                         .expect(&format!("Failed to create hook: {}", stringify!($id)))
                 }
             });
@@ -58,27 +71,27 @@ macro_rules! make_hook {
     };
 }
 
-/// Old
-#[macro_export]
-macro_rules! make_hook_1 {
-    ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*]) => {
-        static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*)>> = Lazy::new(|| {
-            unsafe { retour::GenericDetour::new($ori, $hook) }
-                .expect(&format!("Failed to create hook: {}", stringify!($id)))
-        });
-    };
-    ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*] => $ret:ty) => {
-        static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*) -> $ret>> = Lazy::new(|| {
-            unsafe { retour::GenericDetour::new($ori, $hook) }
-                .expect(&format!("Failed to create hook: {}", stringify!($id)))
-        });
-    };
-}
+// /// Old
+// #[macro_export]
+// macro_rules! make_hook_1 {
+//     ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*]) => {
+//         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*)>> = Lazy::new(|| {
+//             unsafe { retour::GenericDetour::new($ori, $hook) }
+//                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
+//         });
+//     };
+//     ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*] => $ret:ty) => {
+//         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*) -> $ret>> = Lazy::new(|| {
+//             unsafe { retour::GenericDetour::new($ori, $hook) }
+//                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
+//         });
+//     };
+// }
 
 #[macro_export]
 macro_rules! make_type {
     ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*]) => {
-        paste::paste! {
+        $crate::macros::paste! {
             pub struct $name(pub u64);
             impl $name {
                 $(pub unsafe fn [<get_ $field>](&self) -> $ty { 
@@ -92,7 +105,7 @@ macro_rules! make_type {
         }
     };
     ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*], $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
-        make_type!($name, [$($offset => $field: $ty)*]);
+        $crate::make_type!($name, [$($offset => $field: $ty)*]);
         impl $name {
             $(pub unsafe fn $fn(&self, $($param: $paramty)*) -> $ret {
                 $crate::make_func!(self.0 + $fn_offset, [$($paramty)*], $ret)($($param)*)
@@ -100,6 +113,6 @@ macro_rules! make_type {
         }
     };
     ($name:ident, $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
-        make_type!($name, [], $($fn_offset => $fn($($param: $paramty)*): $ret)*);
+        $crate::make_type!($name, [], $($fn_offset => $fn($($param: $paramty)*): $ret)*);
     }
 }

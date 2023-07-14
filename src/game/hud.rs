@@ -42,11 +42,11 @@ pub unsafe fn show_message(message: &'static str, message_type: MessageType, dur
 }
 
 pub unsafe fn create_message(message: &'static str, message_type: MessageType) {
-    let phm = crate::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
     CREATE_MESSAGE(phm, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1);
 }
 
 pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
-    let phm = crate::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
     CLEAR_MESSAGE(phm, message_type.into(), message.as_ptr(), 0);
 }
