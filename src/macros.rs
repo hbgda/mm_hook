@@ -28,10 +28,10 @@ macro_rules! make_func {
 
 #[macro_export]
 macro_rules! make_func_static {
-    ($offset:literal, $name:ident ($($params:ty),*)) => {
+    ($offset:expr, $name:ident ($($params:ty),*)) => {
         make_func_static!($offset, $name ($($params),*): ());
     };
-    ($offset:literal, $name:ident ($($params:ty),*): $ret:ty) => {
+    ($offset:expr, $name:ident ($($params:ty),*): $ret:ty) => {
         static $name: once_cell::sync::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = once_cell::sync::Lazy::new(|| unsafe { $crate::make_func!($crate::get_offset_ptr($offset), [$($params),*], $ret) });
     };
 }

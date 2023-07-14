@@ -128,6 +128,23 @@ make_hook!(
     }
 );
 
+make_hook!(
+    HOOK_IDK,
+    make_func!(get_offset_ptr(0x2108670), [*const i8], u64),
+    (path: *const i8): u64 => {
+        println!("Path: {}", CStr::from_ptr(path).to_str().unwrap());
+        let x = HOOK_IDK.call(path);
+        println!("Return: {x:#x}");
+        x
+    } 
+);
+
+make_hook!(
+    HOOK_Please,
+    make_func!(get_offset_ptr(0x1ecd1f0), []),
+    () => { println!("UUUUUUUU") }
+);
+
 unsafe fn update_loop() {
     loop {
         // KeyCode T 0x54
@@ -137,7 +154,7 @@ unsafe fn update_loop() {
             let hero_name = hero.get_name().expect("Failed to get hero name");
             println!("{hero_name}");
 
-            let hero_transform = hero.get_transform_mut();
+            let hero_transform: &mut game::transform::Transform = hero.get_transform_mut();
             println!("Hero Position: {:?} | Hero Scale: {:?}", hero_transform.get_position(), hero_transform.get_scale());
             let mut position = hero_transform.get_position();
             position.y += 100f32;
@@ -161,12 +178,11 @@ unsafe fn update_loop() {
         }
 
         // KeyCode U 0x55
-        // if get_key!(0x55) {
-        //     message_box!("Exiting update loop.", "This should unload the DLL!", 0);
-        //     break;
-        // }
+        if get_key!(0x55) {
+            FreeConsole();
+            AllocConsole();
+        }
     }
-    panic!();
 }
 
 
@@ -195,25 +211,26 @@ unsafe fn enable_hooks() {
     // HOOK_MissionAbandon_CreatePopup.enable()
     //     .expect("Fucking idk");
 
-    // HOOK_SetMember.enable()
-    //     .expect("SSSSSS");
+    HOOK_SetMember.enable()
+        .expect("SSSSSS");
+
+    HOOK_Please.enable().expect("msg");
+    HOOK_IDK.enable().expect("guhj");
 }
 
-fn init() {
-    unsafe {
-        AllocConsole();
-        println!("Injected!");
+unsafe fn init() {
+    AllocConsole();
+    println!("Injected");
 
-        enable_hooks();
-        thread::spawn(|| update_loop());
-    }
+    enable_hooks();
+    thread::spawn(|| update_loop());
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
 extern "system" fn DllMain(_module: HMODULE, call_reason: u32, _: *mut ()) {
     match call_reason {
-        DLL_PROCESS_ATTACH => init(),
+        DLL_PROCESS_ATTACH => unsafe { init() },
         _ => return,
     };
 
