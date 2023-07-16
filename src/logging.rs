@@ -15,8 +15,8 @@ load_library_func!("mm_hook_debugging", "Log", LOG(*const CModInfo, *const u8));
 
 impl Logger {
     pub fn log(&self, msg: &str) {
-        if let Some(LOG_FN) = &*LOG {
-            LOG_FN(&self.mod_info, msg.as_ptr());
+        if let Some(log_fn) = &*LOG {
+            log_fn(&self.mod_info, msg.as_ptr());
         }
     }
 }

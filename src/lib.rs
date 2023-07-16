@@ -1,4 +1,4 @@
-use std::ffi::{c_char, CString};
+use std::ffi::CString;
 
 pub mod macros;
 pub mod game;
