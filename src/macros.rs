@@ -110,11 +110,17 @@ macro_rules! load_library_func {
         $crate::load_library_func!($module, $module_fn, $fn ($($ty),*): ());
     };
     ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*): $ret:ty) => {
-        const $fn: $crate::Lazy<extern "system" fn($($ty,)*)> = $crate::Lazy::new(|| unsafe {
-            std::mem::transmute::<_, extern "system" fn($($ty,)*)>($crate::GetProcAddress(
-                $crate::HMODULE($crate::GetModuleHandleA($crate::s!($module)).unwrap().0),
-                $crate::s!($module_fn)
-            ).unwrap())
+        const $fn: $crate::Lazy<Option<extern "system" fn($($ty,)*)>> = $crate::Lazy::new(|| unsafe {
+            let handle = match $crate::GetModuleHandleA($crate::s!($module)) {
+                Ok(handle) => handle,
+                Err(_) => return None
+            };
+
+            let func = match $crate::GetProcAddress(handle, $crate::s!($module_fn)) {
+                Some(func) => func,
+                None => return None
+            };
+            Some(std::mem::transmute::<_, extern "system" fn($($ty,)*)>(func))
         });
     };
 }
