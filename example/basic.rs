@@ -1,5 +1,18 @@
 use mm_hook::*;
 
+init_mod!("Example Mod", "1.0", "L", {
+    unsafe { init() }
+});
+
+make_logger!(GetModInfo());
+
+unsafe fn init() {
+    Logger.log("Injected");
+
+    enable_hooks();
+    std::thread::spawn(|| update_loop());
+}
+
 make_hook!(
     HOOK_HeroHealth_Init,
     make_func!(utils::get_offset_ptr(0x9aee50), [u64]),
@@ -26,31 +39,4 @@ unsafe fn update_loop() {
             Logger.log(&format!("Hero Name: {hero_name}"));
         }
     }
-}
-
-unsafe fn init() {
-    Logger.log("Injected");
-
-    enable_hooks();
-    std::thread::spawn(|| update_loop());
-}
-
-#[no_mangle]
-#[allow(non_snake_case)]
-extern "system" fn DllMain(_module: mm_hook::HMODULE, call_reason: u32, _: *mut ()) {
-    match call_reason {
-        DLL_PROCESS_ATTACH => unsafe { init() },
-        _ => return,
-    };
-}
-
-make_logger!(GetModInfo());
-
-#[no_mangle]
-extern "system" fn GetModInfo() -> CModInfo {
-    ModInfo { 
-        title: "Test Script", 
-        version: "0.0.1", 
-        author: "L" 
-    }.into()
 }

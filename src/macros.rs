@@ -132,3 +132,27 @@ macro_rules! make_logger {
         const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| $crate::logging::Logger { mod_info: $mod_info });
     };
 }
+
+#[macro_export]
+macro_rules! init_mod {
+    ($name:literal, $version:literal, $author:literal, $init:block) => {
+        #[no_mangle]
+        #[allow(non_snake_case)]
+        extern "system" fn DllMain(_module: $crate::HMODULE, call_reason: u32, _: *mut ()) {
+            match call_reason {
+                DLL_PROCESS_ATTACH => $init,
+                _ => return,
+            };
+        }
+
+        #[no_mangle]
+        extern "system" fn GetModInfo() -> $crate::CModInfo {
+            $crate::ModInfo::new(
+                $name,
+                $version,
+                $author
+            ).into()
+        }
+
+    };
+}
