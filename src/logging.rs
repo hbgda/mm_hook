@@ -14,7 +14,8 @@ pub struct Logger {
 load_library_func!("mm_hook_debugging", "Log", LOG(*const CModInfo, *const u8));
 
 impl Logger {
-    pub fn log(&self, msg: &str) {
+    pub fn log(&self, mut msg: String) {
+        msg.push('\0');
         if let Some(log_fn) = &*LOG {
             log_fn(&self.mod_info, msg.as_ptr());
         }

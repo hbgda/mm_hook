@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 
 pub mod macros;
 pub mod game;
@@ -23,7 +23,7 @@ pub use {
 };
 
 #[repr(C)]
-#[derive(PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ModInfo {
     pub title: String,
     pub version: String,
@@ -31,10 +31,11 @@ pub struct ModInfo {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub struct CModInfo {
-    pub title: *mut i8,
-    pub version: *mut i8,
-    pub author: *mut i8
+    pub title: *const i8,
+    pub version: *const i8,
+    pub author: *const i8
 }
 
 impl ModInfo {
@@ -47,12 +48,12 @@ impl ModInfo {
     }
 }
 
-impl<'a> Into<CModInfo> for ModInfo {
+impl Into<CModInfo> for ModInfo {
     fn into(self) -> CModInfo {
         CModInfo { 
-            title: CString::new(self.title).unwrap().into_raw(), 
-            version: CString::new(self.version).unwrap().into_raw(), 
-            author: CString::new(self.author).unwrap().into_raw() 
+            title: format!("{}\0", self.title).as_ptr() as *const i8, 
+            version: format!("{}\0", self.version).as_ptr() as *const i8, 
+            author: format!("{}\0", self.author).as_ptr() as *const i8
         }
     }
 }
@@ -60,13 +61,13 @@ impl<'a> Into<CModInfo> for ModInfo {
 impl<'a> From<CModInfo> for ModInfo {
     fn from(value: CModInfo) -> Self {
         unsafe { 
-            let title = CString::from_raw(value.title);
-            let version = CString::from_raw(value.version);
-            let author = CString::from_raw(value.author);
+            let title = CStr::from_ptr(value.title);
+            let version = CStr::from_ptr(value.version);
+            let author = CStr::from_ptr(value.author);
             ModInfo {
-                title: title.to_str().unwrap().to_owned(),
-                version: version.to_str().unwrap().to_owned(),
-                author: author.to_str().unwrap().to_owned()
+                title: title.to_str().expect("Failed to cast ModInfo::Title").to_owned(),
+                version: version.to_str().expect("Failed to cast ModInfo::Version").to_owned(),
+                author: author.to_str().expect("Failed to cast ModInfo::Author").to_owned()
             }
         }
     }
