@@ -127,9 +127,13 @@ macro_rules! load_library_func {
 
 #[macro_export]
 macro_rules! make_logger {
-    ($mod_info:expr) => {
+    () => {
         #[allow(non_upper_case_globals)]
-        const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| $crate::logging::Logger { mod_info: $mod_info });
+        const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| {
+            let logger = $crate::logging::Logger { mod_info: MOD_INFO.clone() };
+            // logger.log("Logging enabled.".into());
+            logger
+        });
     };
 }
 
@@ -140,19 +144,18 @@ macro_rules! init_mod {
         #[allow(non_snake_case)]
         extern "system" fn DllMain(_module: $crate::HMODULE, call_reason: u32, _: *mut ()) {
             match call_reason {
-                DLL_PROCESS_ATTACH => $init,
+                $crate::DLL_PROCESS_ATTACH => $init,
                 _ => return,
             };
         }
 
-        #[no_mangle]
-        extern "system" fn GetModInfo() -> $crate::CModInfo {
-            $crate::ModInfo::new(
-                $name,
-                $version,
-                $author
-            ).into()
-        }
+        const MOD_INFO: $crate::Lazy<$crate::ModInfo> = $crate::Lazy::new(|| {
+            $crate::ModInfo::new($name, $version, $author)
+        });
+        // #[no_mangle]
+        // extern "system" fn CGetModInfo() -> (*const u8, *const u8, *const u8) {
+        //     (MOD_INFO.title.as_ptr(), MOD_INFO.version.as_ptr(), MOD_INFO.author.as_ptr())
+        // }
 
     };
 }
