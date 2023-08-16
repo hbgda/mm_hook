@@ -18,6 +18,7 @@ pub struct Transform {
 }
 
 make_func_static!(0x1E24190, SET_POSITION(*mut Transform, *const Vector3));
+make_func_static!(0x1E24200, SET_SCALE(*mut Transform, *const Vector3));
 
 impl Transform {
     pub unsafe fn set_position(&mut self, new_pos: &Vector3) {
@@ -28,9 +29,8 @@ impl Transform {
         self.position
     }
 
-    pub fn set_scale(&mut self, new_scale: &Vector3) {
-        // SET_SCALE(self, new_scale);
-        todo!()
+    pub unsafe fn set_scale(&mut self, new_scale: &Vector3) {
+        SET_SCALE(self, new_scale);
     }
 
     pub fn get_scale(&self) -> Vector3 {

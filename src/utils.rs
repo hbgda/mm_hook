@@ -1,4 +1,5 @@
-use windows::{Win32::System::LibraryLoader::GetModuleHandleA, s};
+use canny::{pattern::Pattern, ScanPtr};
+use windows::{Win32::System::{LibraryLoader::GetModuleHandleA, ProcessStatus::{MODULEINFO, GetModuleInformation}, Threading::GetCurrentProcess}, s};
 
 pub unsafe fn get_module_base() -> isize {
     GetModuleHandleA(s!("MilesMorales.exe")).unwrap().0

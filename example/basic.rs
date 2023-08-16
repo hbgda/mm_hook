@@ -1,12 +1,14 @@
 use mm_hook::*;
 
-init_mod!("Example Mod", "1.0", "L", unsafe {
-    Logger.log("Injected");
-    enable_hooks();
-    std::thread::spawn(|| update_loop());
+init_mod!("Example Mod", "1.0", "L", {
+    unsafe {
+        Logger.log("Injected");
+        enable_hooks();
+        std::thread::spawn(|| update_loop());
+    }
 });
 
-make_logger!(GetModInfo());
+make_logger!();
 
 make_hook!(
     HOOK_HeroHealth_Init,

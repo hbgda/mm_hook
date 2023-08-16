@@ -18,10 +18,10 @@ macro_rules! get_key {
 
 #[macro_export]
 macro_rules! make_func {
-    ($addr:expr, [$($params:ty),*]) => {
-        $crate::make_func!($addr, [$($params),*], ())
+    ($addr:expr, ($($params:ty),*)) => {
+        $crate::make_func!($addr, ($($params),*): ())
     };
-    ($addr:expr, [$($params:ty),*], $ret:ty) => {
+    ($addr:expr, ($($params:ty),*): $ret:ty) => {
         std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*) -> $ret>($addr as _)
     };
 }
@@ -32,7 +32,7 @@ macro_rules! make_func_static {
         $crate::make_func_static!($offset, $name ($($params),*): ());
     };
     ($offset:expr, $name:ident ($($params:ty),*): $ret:ty) => {
-        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), [$($params),*], $ret) });
+        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), ($($params),*): $ret) });
     };
 }
 
@@ -57,6 +57,7 @@ macro_rules! make_hook {
         }
     };
 }
+
 
 // /// Old
 // #[macro_export]
@@ -129,11 +130,12 @@ macro_rules! load_library_func {
 macro_rules! make_logger {
     () => {
         #[allow(non_upper_case_globals)]
-        const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| {
-            let logger = $crate::logging::Logger { mod_info: MOD_INFO.clone() };
-            // logger.log("Logging enabled.".into());
-            logger
-        });
+        const Logger: $crate::logging::Logger = $crate::logging::Logger { mod_info: MOD_INFO };
+        // const Logger: $crate::Lazy<$crate::logging::Logger> = $crate::Lazy::new(|| {
+        //     let logger = $crate::logging::Logger { mod_info: MOD_INFO.clone() };
+        //     // logger.log("Logging enabled.".into());
+        //     logger
+        // });
     };
 }
 
@@ -149,13 +151,6 @@ macro_rules! init_mod {
             };
         }
 
-        const MOD_INFO: $crate::Lazy<$crate::ModInfo> = $crate::Lazy::new(|| {
-            $crate::ModInfo::new($name, $version, $author)
-        });
-        // #[no_mangle]
-        // extern "system" fn CGetModInfo() -> (*const u8, *const u8, *const u8) {
-        //     (MOD_INFO.title.as_ptr(), MOD_INFO.version.as_ptr(), MOD_INFO.author.as_ptr())
-        // }
-
+        const MOD_INFO: $crate::ModInfo = $crate::ModInfo { title: $name, version: $version, author: $author };
     };
 }
