@@ -12,7 +12,7 @@ make_logger!();
 
 make_hook!(
     HOOK_HeroHealth_Init,
-    make_func!(utils::get_offset_ptr(0x9aee50), [u64]),
+    make_func!(utils::get_offset_ptr(0x9aee50), (u64)),
     (this: u64) => {
         HOOK_HeroHealth_Init.call(this);
         Logger.log(&format!("HeroHealth = {:#x}", this));

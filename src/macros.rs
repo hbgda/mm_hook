@@ -27,6 +27,29 @@ macro_rules! make_func {
 }
 
 #[macro_export]
+macro_rules! scan_func {
+    ($pattern:literal, ($($params:ty),*)) => {
+        $crate::scan_func!($pattern, ($($params),*): ());
+    };
+    ($pattern:literal, ($($params:ty),*): $ret:ty) => {
+        {
+            let pattern = $crate::canny::pattern::Pattern::new($pattern)
+                .expect(&format!("Failed to create pattern: {}.", $pattern));
+            // println!("Made Pattern");
+            let info = $crate::canny::mem::windows::ProcessInfo::internal($crate::s!("MilesMorales.exe"))
+                .expect("Failed to create memory info.");
+            // println!("Made Reader");
+            let mut scanner = $crate::canny::mem::windows::ProcessScanner::scan(info, pattern);
+            // println!("Made Scanner");
+            let addr = scanner.next()
+                .expect(&format!("Failed to find pattern: {}.", $pattern));
+            // println!("Got Addr");
+            $crate::make_func!(addr, ($($params),*): $ret)
+        };
+    }
+}
+
+#[macro_export]
 macro_rules! make_func_static {
     ($offset:expr, $name:ident ($($params:ty),*)) => {
         $crate::make_func_static!($offset, $name ($($params),*): ());
