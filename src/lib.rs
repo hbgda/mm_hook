@@ -2,6 +2,7 @@ pub mod macros;
 pub mod game;
 pub mod utils;
 pub mod logging;
+pub mod patterns;
 
 pub use {
     windows::{s, Win32::{

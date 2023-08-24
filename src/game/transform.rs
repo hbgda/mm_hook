@@ -1,4 +1,4 @@
-use crate::make_func_static;
+use crate::{make_func_static, scan_func_static};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -17,8 +17,11 @@ pub struct Transform {
     scale: Vector3
 }
 
-make_func_static!(0x1E24190, SET_POSITION(*mut Transform, *const Vector3));
-make_func_static!(0x1E24200, SET_SCALE(*mut Transform, *const Vector3));
+scan_func_static!(crate::patterns::TRANSFORM_SETPOSITION, SET_POSITION(*mut Transform, *const Vector3));
+scan_func_static!(crate::patterns::TRANSFORM_SETSCALE, SET_SCALE(*mut Transform, *const Vector3));
+
+// make_func_static!(0x1E24190, SET_POSITION(*mut Transform, *const Vector3));
+// make_func_static!(0x1E24200, SET_SCALE(*mut Transform, *const Vector3));
 
 impl Transform {
     pub unsafe fn set_position(&mut self, new_pos: &Vector3) {

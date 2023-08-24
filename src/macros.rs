@@ -28,10 +28,10 @@ macro_rules! make_func {
 
 #[macro_export]
 macro_rules! scan_func {
-    ($pattern:literal, ($($params:ty),*)) => {
+    ($pattern:expr, ($($params:ty),*)) => {
         $crate::scan_func!($pattern, ($($params),*): ());
     };
-    ($pattern:literal, ($($params:ty),*): $ret:ty) => {
+    ($pattern:expr, ($($params:ty),*): $ret:ty) => {
         {
             let pattern = $crate::canny::pattern::Pattern::new($pattern)
                 .expect(&format!("Failed to create pattern: {}.", $pattern));
@@ -45,7 +45,7 @@ macro_rules! scan_func {
                 .expect(&format!("Failed to find pattern: {}.", $pattern));
             // println!("Got Addr");
             $crate::make_func!(addr, ($($params),*): $ret)
-        };
+        }
     }
 }
 
@@ -56,6 +56,16 @@ macro_rules! make_func_static {
     };
     ($offset:expr, $name:ident ($($params:ty),*): $ret:ty) => {
         static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), ($($params),*): $ret) });
+    };
+}
+
+#[macro_export]
+macro_rules! scan_func_static {
+    ($pattern:expr, $name:ident ($($params:ty),*)) => {
+        $crate::scan_func_static!($pattern, $name($($params),*): ());
+    };
+    ($pattern:expr, $name:ident ($($params:ty),*): $ret:ty) => {
+        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::scan_func!($pattern, ($($params),*): $ret) });
     };
 }
 
