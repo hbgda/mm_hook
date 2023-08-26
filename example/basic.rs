@@ -2,6 +2,7 @@ use mm_hook::*;
 
 init_mod!("Example Mod", "1.0", "L", {
     unsafe {
+        mm_hook::init()
         Logger.log("Injected");
         enable_hooks();
         std::thread::spawn(|| update_loop());

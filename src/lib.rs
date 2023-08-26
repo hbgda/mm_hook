@@ -30,3 +30,8 @@ pub struct ModInfo {
     pub version: &'static str,
     pub author: &'static str
 }
+
+pub unsafe fn init() {
+    game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
+        .expect("Failed to enable hook: PlayerHUD_ctor");
+}

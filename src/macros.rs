@@ -67,7 +67,7 @@ macro_rules! make_hook {
     ($id:ident, $addr:expr, ($($param:ident: $ty:ty),*) -> $ret:ty $code:block) => {
         $crate::paste! {
             #[allow(non_upper_case_globals)]
-            static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
+            pub(crate) static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
                 unsafe {
                     let func = $crate::make_func!($addr, ($($ty),*) -> $ret);
                     $crate::GenericDetour::new(func, [<$id _Fn>])
@@ -77,6 +77,58 @@ macro_rules! make_hook {
             #[allow(non_snake_case)]
             unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
                 $code
+            }
+        }
+    };
+    ($id:ident, $addr:expr, ($($param:ident: $type:ty),*) $code:block, $enabled:literal) => {
+        $crate::make_hook!($id, $addr, ($($param: $type),*) -> () $code, $enabled);
+    };
+    ($id:ident, $addr:expr, ($($param:ident: $ty:ty),*) -> $ret:ty $code:block, $enabled:literal) => {
+        $crate::paste! {
+            #[allow(non_upper_case_globals)]
+            pub(crate) static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
+                unsafe {
+                    let func = $crate::make_func!($addr, ($($ty),*) -> $ret);
+                    let hook = $crate::GenericDetour::new(func, [<$id _Fn>])
+                        .expect(&format!("Failed to create hook: {}", stringify!($id)));
+                    if $enabled {
+                        hook.enable()
+                            .expect(&format!("Failed to enable hook: {}", stringify!($id)));
+                    }
+                    hook
+                }
+            });
+            #[allow(non_snake_case)]
+            unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
+                $code
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! intercept_static {
+    ($id:ident: $ty:ty, $hook_ident:ident, $addr:expr, [ $intercept:ident ] ($($param:ident: $pty:ty),*)) => {
+        $crate::intercept_static!($id: $ty, $hook_ident:ident, $addr, [ $intercept ] ($($param: $pty),*) -> () );
+    };
+    ($id:ident: $ty:ty, $hook_ident:ident, $addr:expr, [ $intercept:ident ] ($($param:ident: $pty:ty),*) -> $ret:ty ) => {
+        $crate::paste! {
+            static mut $id: std::sync::RwLock<Option<$ty>> = std::sync::RwLock::new(None);
+            $crate::make_hook!(
+                $hook_ident,
+                $addr,
+                ($($param: $pty),*) -> $ret {
+                    let mut lock = $id.write().unwrap();
+                    *lock = Some($intercept);
+                    $hook_ident.disable().unwrap();
+                    $hook_ident.call($($param),*)
+                }
+            );
+            pub unsafe fn [<get_ $id:lower>]() -> Option<$ty> {
+                match $id.read() {
+                    Ok(s) => *s,
+                    Err(_) => None
+                }
             }
         }
     };
@@ -126,59 +178,12 @@ macro_rules! make_hook {
 //     };
 // }
 
-
-// /// Old
-// #[macro_export]
-// macro_rules! make_hook_1 {
-//     ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*]) => {
-//         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*)>> = Lazy::new(|| {
-//             unsafe { retour::GenericDetour::new($ori, $hook) }
-//                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
-//         });
-//     };
-//     ($id:ident, $ori:expr, $hook:ident: [$($params:ty),*] => $ret:ty) => {
-//         static $id: once_cell::sync::Lazy<retour::GenericDetour<unsafe extern "system" fn($($params,)*) -> $ret>> = Lazy::new(|| {
-//             unsafe { retour::GenericDetour::new($ori, $hook) }
-//                 .expect(&format!("Failed to create hook: {}", stringify!($id)))
-//         });
-//     };
-// }
-
-#[macro_export]
-macro_rules! make_type {
-    ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*]) => {
-        $crate::paste! {
-            pub struct $name(pub u64);
-            impl $name {
-                $(pub unsafe fn [<get_ $field>](&self) -> $ty { 
-                    std::ptr::read((self.0 + $offset) as *const $ty) 
-                })*
-
-                $(pub unsafe fn [<set_ $field>](&self, val: $ty) {
-                    std::ptr::write((self.0 + $offset) as *mut $ty, val)
-                })*
-            }
-        }
-    };
-    ($name:ident, [$($offset:literal => $field:ident: $ty:ty),*], $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
-        $crate::make_type!($name, [$($offset => $field: $ty)*]);
-        impl $name {
-            $(pub unsafe fn $fn(&self, $($param: $paramty)*) -> $ret {
-                $crate::make_func!(self.0 + $fn_offset, [$($paramty)*], $ret)($($param)*)
-            })*
-        }
-    };
-    ($name:ident, $($fn_offset:literal => $fn:ident ($($param:ident: $paramty:ty),*): $ret:ty),*) => {
-        $crate::make_type!($name, [], $($fn_offset => $fn($($param: $paramty)*): $ret)*);
-    }
-}
-
 #[macro_export]
 macro_rules! load_library_func {
     ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*)) => {
-        $crate::load_library_func!($module, $module_fn, $fn ($($ty),*): ());
+        $crate::load_library_func!($module, $module_fn, $fn ($($ty),*) -> ());
     };
-    ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*): $ret:ty) => {
+    ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*) -> $ret:ty) => {
         const $fn: $crate::Lazy<Option<extern "system" fn($($ty,)*)>> = $crate::Lazy::new(|| unsafe {
             let handle = match $crate::GetModuleHandleA($crate::s!($module)) {
                 Ok(handle) => handle,
@@ -189,7 +194,7 @@ macro_rules! load_library_func {
                 Some(func) => func,
                 None => return None
             };
-            Some(std::mem::transmute::<_, extern "system" fn($($ty,)*)>(func))
+            Some(std::mem::transmute::<_, extern "system" fn($($ty,)*) -> $ret>(func))
         });
     };
 }
