@@ -1,4 +1,4 @@
-use crate::{make_func_static, scan_func_static};
+use crate::scan_func_static;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]

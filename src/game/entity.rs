@@ -1,10 +1,10 @@
 use std::{ffi::CStr, str::Utf8Error, ops::{Deref, DerefMut}};
 
-use crate::make_func_static;
+use crate::scan_func_static;
 
 use super::transform::Transform;
 
-make_func_static!(0x1AA8630, GET_ENTITY(*const u64): u64);
+scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u64) -> u64);
 
 pub unsafe fn get_entity(handle_ptr: *const u64) -> Option<Entity> {
     match GET_ENTITY(handle_ptr) {

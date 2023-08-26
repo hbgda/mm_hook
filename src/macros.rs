@@ -21,7 +21,7 @@ macro_rules! make_func {
     ($addr:expr, ($($params:ty),*)) => {
         $crate::make_func!($addr, ($($params),*): ())
     };
-    ($addr:expr, ($($params:ty),*): $ret:ty) => {
+    ($addr:expr, ($($params:ty),*) -> $ret:ty) => {
         std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*) -> $ret>($addr as _)
     };
 }
@@ -31,20 +31,10 @@ macro_rules! scan_func {
     ($pattern:expr, ($($params:ty),*)) => {
         $crate::scan_func!($pattern, ($($params),*): ());
     };
-    ($pattern:expr, ($($params:ty),*): $ret:ty) => {
+    ($pattern:expr, ($($params:ty),*) -> $ret:ty) => {
         {
-            let pattern = $crate::canny::pattern::Pattern::new($pattern)
-                .expect(&format!("Failed to create pattern: {}.", $pattern));
-            // println!("Made Pattern");
-            let info = $crate::canny::mem::windows::ProcessInfo::internal($crate::s!("MilesMorales.exe"))
-                .expect("Failed to create memory info.");
-            // println!("Made Reader");
-            let mut scanner = $crate::canny::mem::windows::ProcessScanner::scan(info, pattern);
-            // println!("Made Scanner");
-            let addr = scanner.next()
-                .expect(&format!("Failed to find pattern: {}.", $pattern));
-            // println!("Got Addr");
-            $crate::make_func!(addr, ($($params),*): $ret)
+            let addr = $crate::utils::scan($pattern).unwrap();
+            $crate::make_func!(addr, ($($params),*) -> $ret)
         }
     }
 }
@@ -54,32 +44,33 @@ macro_rules! make_func_static {
     ($offset:expr, $name:ident ($($params:ty),*)) => {
         $crate::make_func_static!($offset, $name ($($params),*): ());
     };
-    ($offset:expr, $name:ident ($($params:ty),*): $ret:ty) => {
-        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), ($($params),*): $ret) });
+    ($offset:expr, $name:ident ($($params:ty),*) -> $ret:ty) => {
+        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), ($($params),*) -> $ret) });
     };
 }
 
 #[macro_export]
 macro_rules! scan_func_static {
     ($pattern:expr, $name:ident ($($params:ty),*)) => {
-        $crate::scan_func_static!($pattern, $name($($params),*): ());
+        $crate::scan_func_static!($pattern, $name($($params),*) -> ());
     };
-    ($pattern:expr, $name:ident ($($params:ty),*): $ret:ty) => {
-        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::scan_func!($pattern, ($($params),*): $ret) });
+    ($pattern:expr, $name:ident ($($params:ty),*) -> $ret:ty) => {
+        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::scan_func!($pattern, ($($params),*) -> $ret) });
     };
 }
 
 #[macro_export]
 macro_rules! make_hook {
-    ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block) => {
-        $crate::make_hook!($id, $ori, ($($param: $ty),*): () => $code);
+    ($id:ident, $addr:expr, ($($param:ident: $type:ty),*) $code:block) => {
+        $crate::make_hook!($id, $addr, ($($param: $type),*) -> () $code);
     };
-    ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block) => {
+    ($id:ident, $addr:expr, ($($param:ident: $ty:ty),*) -> $ret:ty $code:block) => {
         $crate::paste! {
             #[allow(non_upper_case_globals)]
             static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
                 unsafe {
-                    $crate::GenericDetour::new($ori, [<$id _Fn>])
+                    let func = $crate::make_func!($addr, ($($ty),*) -> $ret);
+                    $crate::GenericDetour::new(func, [<$id _Fn>])
                         .expect(&format!("Failed to create hook: {}", stringify!($id)))
                 }
             });
@@ -90,6 +81,50 @@ macro_rules! make_hook {
         }
     };
 }
+
+// #[macro_export]
+// macro_rules! make_hook {
+//     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block) => {
+//         $crate::make_hook!($id, $ori, ($($param: $ty),*): () => $code);
+//     };
+//     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block) => {
+//         $crate::paste! {
+//             #[allow(non_upper_case_globals)]
+//             static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
+//                 unsafe {
+//                     $crate::GenericDetour::new($ori, [<$id _Fn>])
+//                         .expect(&format!("Failed to create hook: {}", stringify!($id)));
+//                 }
+//             });
+//             #[allow(non_snake_case)]
+//             unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
+//                 $code
+//             }
+//         }
+//     };
+//     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*) => $code:block, $enabled:literal) => {
+//         $crate::make_hook!($id, $ori, ($($param: $ty),*): () => $code, $enabled);
+//     };
+//     ($id:ident, $ori:expr, ($($param:ident: $ty:ty),*): $ret:ty => $code:block, $enabled:literal) => {
+//         $crate::paste! {
+//             #[allow(non_upper_case_globals)]
+//             static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
+//                 unsafe {
+//                     let hook = $crate::GenericDetour::new($ori, [<$id _Fn>])
+//                         .expect(&format!("Failed to create hook: {}", stringify!($id)));
+//                     if $enabled {
+//                         hook.enable();
+//                     }
+//                     hook
+//                 }
+//             });
+//             #[allow(non_snake_case)]
+//             unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
+//                 $code
+//             }
+//         }
+//     };
+// }
 
 
 // /// Old

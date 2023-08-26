@@ -1,7 +1,64 @@
 use std::time::Duration;
 
 use super::OFFSET_PLAYERHUDMESSAGE;
-use crate::{make_func_static, scan_func_static};
+use crate::scan_func_static;
+
+
+scan_func_static!(crate::patterns::HUD_CREATEMESSAGE, CREATE_MESSAGE(u64, u32, *const u8, u32, u32, u32, u8, u8) -> u64);
+scan_func_static!(crate::patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(u64, u32, *const u8, u32) -> u32);
+
+// make_func_static!(0x8E5890, CREATE_MESSAGE(u64, u32, *const u8, u32, u32, u32, u8, u8): u64);
+// make_func_static!(0x8E6AB0, CLEAR_MESSAGE(u64, u32, *const u8, u32): u32);
+
+pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Option<Duration>) {
+    create_message(message, message_type.clone());
+    if let Some(duration) = duration {
+        std::thread::spawn(move || {
+            std::thread::sleep(duration);
+            clear_message(message, message_type);
+        });
+    }
+}
+
+pub unsafe fn create_message(message: &'static str, message_type: MessageType) {
+    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    CREATE_MESSAGE(phm, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1);
+}
+
+pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
+    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
+    CLEAR_MESSAGE(phm, message_type.into(), message.as_ptr(), 0);
+}
+
+#[repr(C)]
+pub struct PlayerHUD {
+    _0x0: [u8; 0x18F],
+    hud_ammo: *const (),
+    hud_reticule: *const (),
+    hud_message: *const (),
+    hud_poi: *const (),
+    hud_progress_bar: *const (),
+    hud_quick_select: *const (),
+    hud_health: *const (),
+    hud_app: *const (),
+    hud_target_lock: *const (),
+    hud_interact_button: *const (),
+    hud_activities: *const (),
+    hud_qte: *const (),
+    hud_spider_assault: *const (),
+    hud_combo_meter: *const (),
+    hud_countdown: *const (),
+    hud_mission: *const (),
+    hud_counter: *const (),
+    hud_inventory: *const (),
+    hud_pip_clue: *const (),
+    hud_placeable_button_prompt: *const (),
+    hud_communicator: *const (),
+    hud_eavesdrop_monitor: *const (),
+    hud_photo_mode: *const (),
+    hud_prowler_collectible: *const (),
+    hud_map: *const ()
+}
 
 #[derive(Clone)]
 pub enum MessageType {
@@ -26,30 +83,4 @@ impl Into<u32> for MessageType {
             Self::ShowFNSMReminder => 21,
         }
     }
-}
-
-scan_func_static!(crate::patterns::HUD_CREATEMESSAGE, CREATE_MESSAGE(u64, u32, *const u8, u32, u32, u32, u8, u8): u64);
-scan_func_static!(crate::patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(u64, u32, *const u8, u32): u32);
-
-// make_func_static!(0x8E5890, CREATE_MESSAGE(u64, u32, *const u8, u32, u32, u32, u8, u8): u64);
-// make_func_static!(0x8E6AB0, CLEAR_MESSAGE(u64, u32, *const u8, u32): u32);
-
-pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Option<Duration>) {
-    create_message(message, message_type.clone());
-    if let Some(duration) = duration {
-        std::thread::spawn(move || {
-            std::thread::sleep(duration);
-            clear_message(message, message_type);
-        });
-    }
-}
-
-pub unsafe fn create_message(message: &'static str, message_type: MessageType) {
-    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
-    CREATE_MESSAGE(phm, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1);
-}
-
-pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
-    let phm = crate::utils::get_offset(OFFSET_PLAYERHUDMESSAGE) as u64;
-    CLEAR_MESSAGE(phm, message_type.into(), message.as_ptr(), 0);
 }
