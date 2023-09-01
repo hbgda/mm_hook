@@ -19,7 +19,7 @@ macro_rules! get_key {
 #[macro_export]
 macro_rules! make_func {
     ($addr:expr, ($($params:ty),*)) => {
-        $crate::make_func!($addr, ($($params),*): ())
+        $crate::make_func!($addr, ($($params),*) -> ())
     };
     ($addr:expr, ($($params:ty),*) -> $ret:ty) => {
         std::mem::transmute::<*const (), unsafe extern "system" fn($($params,)*) -> $ret>($addr as _)

@@ -18,9 +18,9 @@ pub unsafe fn show_message(message: &'static str, message_type: MessageType, dur
     }
 }
 
-pub unsafe fn create_message(message: &'static str, message_type: MessageType) {
+pub unsafe fn create_message(message: &'static str, message_type: MessageType) -> u64 {
     let hud = &*get_player_hud().unwrap();
-    CREATE_MESSAGE(hud.hud_message, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1);
+    CREATE_MESSAGE(hud.hud_message, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1)
 }
 
 pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {

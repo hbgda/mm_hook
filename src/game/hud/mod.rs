@@ -1,4 +1,4 @@
-use crate::intercept_static;
+use crate::{intercept_static, scan_func_static};
 
 pub mod message;
 
@@ -38,4 +38,12 @@ pub struct PlayerHUD {
     hud_photo_mode: *const (),
     hud_prowler_collectible: *const (),
     hud_map: *const ()
+}
+
+scan_func_static!(crate::patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));
+
+impl PlayerHUD {
+    pub unsafe fn hide(&self, u0: u32, u1: u32, u2: f32) {
+        HIDE_HUD(self, u0, u1, u2);
+    }
 }
