@@ -43,17 +43,15 @@ make_hook!(
     crate::utils::scan(crate::patterns::KEYBIND_REGISTERKEYBINDS).unwrap(),
     () {
         HOOK_CreateKeybinds.call();
-        let nx_actions = nx::get_nx_actions() as *const u64;
-        // let nx_actions = ((nx as u64) + 0xa8) as *const ();
+        let nx_actions = nx::get_nx_actions();
         for partial in KEYBIND_QUEUE.iter() {
             MOD_KEYBIND_IDS.push(format!("Mkb_Custom_{}\0", partial.idx));
-            let bind = CREATE_KEYBIND(nx_actions as *const (), 4, partial.idx, partial.name, partial.primary, partial.secondary) as *mut Keybind;
+            let bind = CREATE_KEYBIND(nx_actions, 4, partial.idx, partial.name, partial.primary, partial.secondary) as *mut Keybind;
             (*bind).description = partial.desc;
             (*bind).locked = partial.locked;
-            // (*bind).default_secondary = partial.secondary;
             CREATED_KEYBINDS.insert(partial.idx, bind);
         }
-        let f = make_func!(*((*nx_actions + 0x78) as *const *const ()), (*const (), u64));
-        f(nx_actions as *const (), 0xb);
+        // let f = make_func!(*((*(nx_actions as *const u64) + 0x78) as *const *const ()), (*const (), u64));
+        // f(nx_actions, 0xb);
     }
 );

@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 
 use crate::{scan_func_static, game::nx, make_hook, make_func};
 
-use self::keybind::Keybind;
+use self::keybind::{Keybind, KeyCode, KeybindState};
 
 scan_func_static!(crate::patterns::KEYBIND_CREATEKEYBIND, CREATE_KEYBIND(*const (), u32, u32, *const u8, u32, u32) -> *const Keybind);
 
@@ -58,7 +58,9 @@ pub unsafe fn next_index() -> u32 {
 
 struct KeybindData {
     pub idx: u32,
-    pub event: fn(),
+    pub name: String,
+    pub desc: String,
+    pub event: fn(KeybindState),
     pub was_pressed: bool
 }
 
@@ -73,32 +75,51 @@ impl KeybindManager {
 
     pub unsafe fn add_keybind(
         &mut self,
-        name: &'static str, 
-        desc: &'static str, 
-        primary: u32, 
-        secondary: Option<u32>, 
+        name: String, 
+        desc: String, 
+        primary: KeyCode, 
+        secondary: Option<KeyCode>, 
         locked: bool,
-        event: fn()
+        event: fn(KeybindState)
     ) {
-        let secondary = secondary.unwrap_or(1000);
-        let idx = queue_create_keybind(name.as_ptr(), desc.as_ptr(), primary, secondary, locked);
-        self.binds.push(
-            KeybindData {
-                idx,
-                event,
-                was_pressed: false
-            }
+        let name = format!("{name}\0");
+        let desc = format!("{desc}\0");
+
+        let secondary: u32 = match secondary {
+            Some(k) => k as u32,
+            None => 1000
+        };
+
+        let mut partial = KeybindData {
+            idx: 0,
+            name,
+            desc,
+            event,
+            was_pressed: false
+        };
+
+        partial.idx = queue_create_keybind(
+            partial.name.as_ptr(), 
+            partial.desc.as_ptr(), 
+            primary as u32, 
+            secondary as u32, 
+            locked
         );
+
+        self.binds.push(partial);
     }
 
     pub unsafe fn poll(&mut self) {
         for data in self.binds.iter_mut() {
             let Some(bind) = get_keybind(data.idx) else { continue }; 
-            if (*(*bind).info).pressed && !data.was_pressed {
-                (data.event)();
+            let state = (*bind).state;
+            if (*state).pressed && !data.was_pressed {
+                (data.event)(
+                    std::ptr::read(state)
+                );
                 data.was_pressed = true;
             }
-            else if !(*(*bind).info).pressed {
+            else if !(*(*bind).state).pressed {
                 data.was_pressed = false;
             }
         }
