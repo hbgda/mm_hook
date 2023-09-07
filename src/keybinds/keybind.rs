@@ -17,8 +17,10 @@ pub struct KeybindState {
     _0x0: [u8; 0xA3],
     pub primary_key: u32,
     pub secondary_key: u32,
-    pub pressed: bool,
-    unknown: u32 // Possibly related to held time?
+    pub primary_pressed: bool,
+    unknown: u32, // Possibly related to held time?
+    _0xb4: [u8; 0x124],
+    pub pressed: f32
 }
 
 pub enum KeyCode {

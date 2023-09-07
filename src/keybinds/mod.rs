@@ -60,7 +60,7 @@ struct KeybindData {
     pub idx: u32,
     pub name: String,
     pub desc: String,
-    pub event: fn(KeybindState),
+    pub event: fn(&KeybindState),
     pub was_pressed: bool
 }
 
@@ -80,7 +80,7 @@ impl KeybindManager {
         primary: KeyCode, 
         secondary: Option<KeyCode>, 
         locked: bool,
-        event: fn(KeybindState)
+        event: fn(&KeybindState)
     ) {
         let name = format!("{name}\0");
         let desc = format!("{desc}\0");
@@ -112,14 +112,12 @@ impl KeybindManager {
     pub unsafe fn poll(&mut self) {
         for data in self.binds.iter_mut() {
             let Some(bind) = get_keybind(data.idx) else { continue }; 
-            let state = (*bind).state;
-            if (*state).pressed && !data.was_pressed {
-                (data.event)(
-                    std::ptr::read(state)
-                );
+            let state = &*(*bind).state;
+            if state.pressed == 1.0 && !data.was_pressed {
+                (data.event)(state);
                 data.was_pressed = true;
             }
-            else if !(*(*bind).state).pressed {
+            else if state.pressed != 1.0 {
                 data.was_pressed = false;
             }
         }

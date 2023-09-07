@@ -3,6 +3,7 @@ pub mod entity;
 pub mod hud;
 pub mod transform;
 pub mod nx;
+pub mod ui;
 
 // TODO: Pattern Scanning for offsets
 pub(crate) const OFFSET_HERO_HANDLE_PTR: isize = 0x66EAE2C;
