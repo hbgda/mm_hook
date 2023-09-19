@@ -1,11 +1,10 @@
-use std::{fs::OpenOptions, io::Write};
-
 pub mod macros;
 pub mod game;
 pub mod utils;
 pub mod logging;
 pub mod patterns;
 pub mod keybinds;
+pub mod settings;
 
 pub use {
     windows::{s, Win32::{
@@ -44,7 +43,6 @@ pub struct ModInfo {
 pub unsafe fn init() {
     game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
         .expect("Failed to enable hook: PlayerHUD::Init()");
-    // game::nx::HOOK_Nx_Init.enable()
-    //     .expect("Failed to enable hook: nx::Init()");
+
     keybinds::hooks::enable();
 }

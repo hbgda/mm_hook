@@ -1,11 +1,11 @@
 pub mod keybind;
 pub mod hooks;
 
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use once_cell::sync::Lazy;
 
-use crate::{scan_func_static, game::nx, make_hook, make_func};
+use crate::scan_func_static;
 
 use self::keybind::{Keybind, KeyCode, KeybindState};
 

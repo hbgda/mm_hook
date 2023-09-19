@@ -1,5 +1,4 @@
-use crate::{make_hook, scan_func_static, make_func_static};
-use std::arch::asm;
+use crate::make_func_static;
 
 make_func_static!(0x21AB870, GET_NX_ACTIONS() -> *const ());
 pub unsafe fn get_nx_actions() -> *const () {

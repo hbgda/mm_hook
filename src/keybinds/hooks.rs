@@ -1,6 +1,6 @@
-use crate::{make_hook, utils, game::nx, make_func};
+use crate::{make_hook, utils, game::nx};
 
-use super::{KEYBIND_QUEUE, CREATE_KEYBIND, CREATED_KEYBINDS, keybind::Keybind, KEYBIND_INDEX};
+use super::{KEYBIND_QUEUE, CREATE_KEYBIND, CREATED_KEYBINDS, keybind::Keybind};
 
 pub unsafe fn enable() {
     HOOK_GetKeybindCategory.enable()
