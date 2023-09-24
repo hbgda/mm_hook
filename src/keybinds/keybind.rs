@@ -65,7 +65,7 @@ pub enum KeyCode {
     RightMouse,
     Mouse4,
     Mouse5,
-    // Wheel keybinds not currently working properly
+    
     MouseWheelUp,
     MouseWheelDown,
     MouseWheelLeft,
