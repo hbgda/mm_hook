@@ -1,6 +1,6 @@
 use crate::{make_hook, utils, game::nx};
 
-use super::{KEYBIND_QUEUE, CREATE_KEYBIND, CREATED_KEYBINDS, keybind::Keybind};
+use super::{KEYBIND_QUEUE, CREATE_KEYBIND, CREATED_KEYBINDS, keybind::Keybind, KEYBIND_MOD_CATEGORIES};
 
 pub unsafe fn enable() {
     HOOK_GetKeybindCategory.enable()
@@ -25,14 +25,14 @@ make_hook!(
     }
 );
 
-const KEYBIND_CATEGORY_MODS: &'static str = "MODS\0";
+// const KEYBIND_CATEGORY_MODS: &'static str = "MODS\0";
 make_hook!(
     HOOK_GetKeybindCategory,
     // Not sure how I can avoid the static offset here
     crate::utils::get_offset_ptr(0x0d8ace0),
     (cat: u32) -> *const u8 {
-        if cat == 4 {
-            return KEYBIND_CATEGORY_MODS.as_ptr();
+        if cat >= 4 {
+            return KEYBIND_MOD_CATEGORIES[(cat - 4) as usize].as_ptr();
         }
         HOOK_GetKeybindCategory.call(cat)
     }
@@ -46,7 +46,7 @@ make_hook!(
         let nx_actions = nx::get_nx_actions();
         for partial in KEYBIND_QUEUE.iter() {
             MOD_KEYBIND_IDS.push(format!("Mkb_Custom_{}\0", partial.idx));
-            let bind = CREATE_KEYBIND(nx_actions, 4, partial.idx, partial.name, partial.primary, partial.secondary) as *mut Keybind;
+            let bind = CREATE_KEYBIND(nx_actions, partial.group, partial.idx, partial.name, partial.primary, partial.secondary) as *mut Keybind;
             (*bind).description = partial.desc;
             (*bind).locked = partial.locked;
             CREATED_KEYBINDS.insert(partial.idx, bind);

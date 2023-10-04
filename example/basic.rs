@@ -20,15 +20,20 @@ unsafe fn enable_hooks() {
 unsafe fn update_loop(keybinds: KeybindManager) {
     loop {
         keybinds.poll();
+
+        // Check if a key is pressed,
+        // may be useful in certain cases but it is recommended to use native binds
         // 0x54 T
         if get_key!(0x54) {
-            let hero = game::hero::get_hero_entity().expect("Failed to get hero entity.");
+            let hero = game::hero::get_hero().expect("Failed to get hero entity.");
             let hero_name = hero.get_name().expect("Failed to get hero name.");
             Logger.log(format!("Hero Name: {hero_name}"));
         }
     }
 }
 
+// Create native keybinds, 
+// these can be viewed and modiified in game through settings
 unsafe fn create_keybinds() -> Option<KeybindManager> {
     let mut manager = KeybindManager::new();
 

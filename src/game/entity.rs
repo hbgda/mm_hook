@@ -36,7 +36,7 @@ pub struct Register {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ComponentEntry {
     pub register: *const Register,
     pub component: *const ()
@@ -48,7 +48,7 @@ pub struct Entity {
     transform: *const Transform,
     _pad: [u8; 0x60],
     component_list: *const [ComponentEntry; 0],
-    components_len: u16,
+    component_count: u16,
     _pad1: [u8; 0x38],
     name: *const u8
 }
@@ -57,6 +57,13 @@ impl Entity {
     pub unsafe fn get_name(&self) -> Result<&str, Utf8Error> {
         CStr::from_ptr(self.name as *const i8).to_str()
     }
+    
+    pub unsafe fn get_components_sized(&self) -> Vec<&ComponentEntry> {
+        (0..self.component_count as usize)
+            .into_iter()
+            .map(|i| (&*self.component_list).get_unchecked(i))
+            .collect()
+    }
 
     pub unsafe fn get_components(&self) -> &[ComponentEntry] {
         (&*self.component_list) as &[_]
@@ -64,7 +71,7 @@ impl Entity {
 
     pub unsafe fn get_component_by_name(&self, name: &str) -> Option<*const ()> {
         let component_list = self.get_components();
-        for i in 0..self.components_len as usize {
+        for i in 0..self.component_count as usize {
             let entry = component_list.get_unchecked(i);
             let entry_name = CStr::from_ptr((*entry.register).name as *const i8)
                 .to_str()
@@ -95,6 +102,9 @@ impl Entity {
 
     pub unsafe fn get_transform_mut(&mut self) -> &mut Transform {
         &mut *(self.transform as *mut Transform)
+    }
 
+    pub unsafe fn set_transform(&mut self, transform: *const Transform) {
+        self.transform = transform;
     }
 }

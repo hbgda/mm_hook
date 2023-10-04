@@ -17,18 +17,27 @@ pub struct PartialBind {
     desc: *const u8,
     primary: u32,
     secondary: u32,
+    group: u32,
     locked: bool,
 }
 
 static mut KEYBIND_INDEX: u32 = 0x50;
+static mut KEYBIND_MOD_CATEGORIES: Vec<String> = Vec::new();
 static mut KEYBIND_QUEUE: Vec<PartialBind> = Vec::new();
 static mut CREATED_KEYBINDS: Lazy<HashMap<u32, *const Keybind>> = Lazy::new(HashMap::new);
+
+pub unsafe fn register_category(title: String) -> u32 {
+    // Make sure title is properly terminated.
+    KEYBIND_MOD_CATEGORIES.push(format!("{title}\0"));
+    KEYBIND_MOD_CATEGORIES.len() as u32 + 4 - 1
+}
 
 pub unsafe fn queue_create_keybind(        
     name: *const u8, 
     desc: *const u8, 
     primary: u32, 
-    secondary: u32, 
+    secondary: u32,
+    group: u32,
     locked: bool,
 ) -> u32 {
     let idx = next_index();
@@ -39,6 +48,7 @@ pub unsafe fn queue_create_keybind(
             desc,
             primary,
             secondary,
+            group,
             locked,
         }
     );
@@ -65,12 +75,16 @@ struct KeybindData {
 }
 
 pub struct KeybindManager {
+    category_group: u32,
     binds: Vec<KeybindData>,
 }
 
 impl KeybindManager {
-    pub fn new() -> KeybindManager {
-        KeybindManager { binds: Vec::new() }
+    pub unsafe fn new(category_title: String) -> KeybindManager {
+        KeybindManager { 
+            binds: Vec::new(),
+            category_group: register_category(category_title)
+        }
     }
 
     pub unsafe fn add_keybind(
@@ -102,7 +116,8 @@ impl KeybindManager {
             partial.name.as_ptr(), 
             partial.desc.as_ptr(), 
             primary as u32, 
-            secondary as u32, 
+            secondary as u32,
+            self.category_group,
             locked
         );
 
