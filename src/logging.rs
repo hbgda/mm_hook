@@ -20,4 +20,10 @@ impl Logger {
             log_fn(self.mod_info.clone(), msg);
         }
     }
+
+    pub(crate) fn sys_log(msg: String) {
+        if let Some(log_fn) = &*LOG {
+            log_fn(ModInfo { title: "mm_hook", version: "", author: "" }, msg);
+        }
+    }
 }

@@ -42,7 +42,7 @@ macro_rules! scan_func {
 #[macro_export]
 macro_rules! make_func_static {
     ($offset:expr, $name:ident ($($params:ty),*)) => {
-        $crate::make_func_static!($offset, $name ($($params),*): ());
+        $crate::make_func_static!($offset, $name ($($params),*) -> ());
     };
     ($offset:expr, $name:ident ($($params:ty),*) -> $ret:ty) => {
         static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($crate::utils::get_offset_ptr($offset), ($($params),*) -> $ret) });
@@ -72,30 +72,6 @@ macro_rules! make_hook {
                     let func = $crate::make_func!($addr, ($($ty),*) -> $ret);
                     $crate::GenericDetour::new(func, [<$id _Fn>])
                         .expect(&format!("Failed to create hook: {}", stringify!($id)))
-                }
-            });
-            #[allow(non_snake_case)]
-            unsafe extern "system" fn [<$id _Fn>]($($param: $ty,)*) -> $ret {
-                $code
-            }
-        }
-    };
-    ($id:ident, $addr:expr, ($($param:ident: $type:ty),*) $code:block, $enabled:literal) => {
-        $crate::make_hook!($id, $addr, ($($param: $type),*) -> () $code, $enabled);
-    };
-    ($id:ident, $addr:expr, ($($param:ident: $ty:ty),*) -> $ret:ty $code:block, $enabled:literal) => {
-        $crate::paste! {
-            #[allow(non_upper_case_globals)]
-            pub(crate) static $id: $crate::Lazy<$crate::GenericDetour<unsafe extern "system" fn($($ty,)*) -> $ret>> = $crate::Lazy::new(|| {
-                unsafe {
-                    let func = $crate::make_func!($addr, ($($ty),*) -> $ret);
-                    let hook = $crate::GenericDetour::new(func, [<$id _Fn>])
-                        .expect(&format!("Failed to create hook: {}", stringify!($id)));
-                    if $enabled {
-                        hook.enable()
-                            .expect(&format!("Failed to enable hook: {}", stringify!($id)));
-                    }
-                    hook
                 }
             });
             #[allow(non_snake_case)]

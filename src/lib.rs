@@ -5,6 +5,7 @@ pub mod logging;
 pub mod patterns;
 pub mod keybinds;
 pub mod settings;
+pub mod overrides;
 
 pub use {
     windows::{s, Win32::{
@@ -44,5 +45,6 @@ pub unsafe fn init() {
     game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
         .expect("Failed to enable hook: PlayerHUD::Init()");
 
+    overrides::init_scaleform();
     keybinds::hooks::enable();
 }
