@@ -34,17 +34,11 @@ pub struct ModInfo {
     pub author: &'static str
 }
 
-// #[derive(Eq, PartialEq, Hash)]
-// pub struct SendPtr<T> {
-//     pub ptr: *const T
-// }
-// unsafe impl<T> Send for SendPtr<T> {}
-
-
 pub unsafe fn init() {
-    game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
-        .expect("Failed to enable hook: PlayerHUD::Init()");
+    // game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
+    //     .expect("Failed to enable hook: PlayerHUD::Init()");
 
-    overrides::init_scaleform();
+    // overrides::init_scaleform();
+    
     keybinds::hooks::enable();
 }

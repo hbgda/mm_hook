@@ -27,3 +27,10 @@ pub unsafe fn scan(pattern_str: &'static str) -> Result<*const (), Box<dyn Error
         None => Err(format!("Failed to find address for pattern: {pattern_str}").into())
     }
 }
+
+pub fn option_ptr<T>(ptr: *const T) -> Option<*const T> {
+    if ptr.is_null() {
+        return None
+    }
+    Some(ptr)
+}

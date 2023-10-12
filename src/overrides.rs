@@ -1,7 +1,4 @@
-use std::{ffi::CStr, path::Path, collections::HashMap};
-
-use once_cell::sync::Lazy;
-
+use std::{ffi::CStr, path::Path};
 use crate::{make_hook, utils, patterns, logging::Logger, game::scaleform};
 
 make_hook!(

@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use crate::scan_func_static;
+use crate::{scan_func_static, patterns};
 
-use super::get_player_hud;
+use super::get_hud;
 
 
-scan_func_static!(crate::patterns::HUD_CREATEMESSAGE, CREATE_MESSAGE(*const (), u32, *const u8, u32, u32, u32, u8, u8) -> u64);
-scan_func_static!(crate::patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const (), u32, *const u8, u32) -> u32);
+scan_func_static!(patterns::HUD_CREATEMESSAGE, CREATE_MESSAGE(*const (), u32, *const u8, u32, u32, u32, u8, u8) -> u64);
+scan_func_static!(patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const (), u32, *const u8, u32) -> u32);
 
 pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Option<Duration>) {
     create_message(message, message_type.clone());
@@ -19,12 +19,12 @@ pub unsafe fn show_message(message: &'static str, message_type: MessageType, dur
 }
 
 pub unsafe fn create_message(message: &'static str, message_type: MessageType) -> u64 {
-    let hud = &*get_player_hud().unwrap();
+    let hud = &*get_hud().unwrap();
     CREATE_MESSAGE(hud.hud_message, message_type.into(), message.as_ptr(), 0, 0, 0, 0, 1)
 }
 
 pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
-    let hud = &*get_player_hud().unwrap();
+    let hud = &*get_hud().unwrap();
     CLEAR_MESSAGE(hud.hud_message, message_type.into(), message.as_ptr(), 0);
 }
 

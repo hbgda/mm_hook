@@ -1,14 +1,14 @@
-use crate::{intercept_static, scan_func_static};
+use crate::{intercept_static, scan_func_static, utils, patterns};
 
 pub mod message;
 
-intercept_static!(
-    PLAYER_HUD: *const PlayerHUD,
-    HOOK_HUD_CreatePlayerHUD_Intercept,
-    crate::utils::scan(crate::patterns::HUD_CREATEPLAYERHUD).unwrap(),
-    [ hud ]
-    (hud: *const PlayerHUD, unk: i32) -> *const PlayerHUD
-);
+// intercept_static!(
+//     PLAYER_HUD: *const PlayerHUD,
+//     HOOK_HUD_CreatePlayerHUD_Intercept,
+//     utils::scan(crate::patterns::HUD_CREATEPLAYERHUD).unwrap(),
+//     [ hud ]
+//     (hud: *const PlayerHUD, unk: i32) -> *const PlayerHUD
+// );
 
 #[repr(C)]
 pub struct PlayerHUD {
@@ -40,7 +40,12 @@ pub struct PlayerHUD {
     hud_map: *const ()
 }
 
-scan_func_static!(crate::patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));
+scan_func_static!(patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));
+scan_func_static!(patterns::HUD_GETHUD, GETHUD(u32) -> *const PlayerHUD);
+
+pub unsafe fn get_hud<'l>() -> Option<&'l PlayerHUD> {
+    Some(&*utils::option_ptr(GETHUD(0))?)
+}
 
 impl PlayerHUD {
     pub unsafe fn hide(&self, u0: u32, u1: u32, u2: f32) {

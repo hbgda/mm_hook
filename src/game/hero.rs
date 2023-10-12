@@ -2,13 +2,6 @@ use crate::utils::get_offset_ptr;
 
 use super::{entity::{Entity, self}, OFFSET_HERO_HANDLE_PTR};
 
-// pub unsafe fn get_hero_entity() -> Entity {
-//     let p1: *const u64 = get_offset_ptr(OFFSET_HERO_PTR);
-//     let p2: *const u64 = p1.read() as *const u64;
-//     let p3: u64 = ((p2.read() + 8) as *const u64).read();
-//     Entity(p3)
-// }
-
 pub unsafe fn get_hero<'l>() -> Option<&'l Entity> {
     entity::get_entity(get_offset_ptr(OFFSET_HERO_HANDLE_PTR))
 }
