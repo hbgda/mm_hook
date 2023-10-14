@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use canny::mem::windows::{ProcessScanner, ProcessInfo};
 use windows::{Win32::System::LibraryLoader::GetModuleHandleA, s};
 
 pub unsafe fn get_module_base() -> isize {
@@ -19,13 +20,17 @@ pub unsafe fn get_offset_ptr_mut<T>(offset: isize) -> *mut T {
 }
 
 pub unsafe fn scan(pattern_str: &'static str) -> Result<*const (), Box<dyn Error>> {
-    let pattern = canny::pattern::Pattern::new(pattern_str)?;
-    let info = canny::mem::windows::ProcessInfo::internal(s!("MilesMorales.exe"))?;
-    let mut scanner = canny::mem::windows::ProcessScanner::scan(info, pattern);
+    let mut scanner = create_scanner(pattern_str)?;
     match scanner.next() {
         Some(addr) => Ok(addr as *const ()),
         None => Err(format!("Failed to find address for pattern: {pattern_str}").into())
     }
+}
+
+pub unsafe fn create_scanner(pattern_str: &'static str) -> Result<ProcessScanner, Box<dyn Error>> {
+    let pattern = canny::pattern::Pattern::new(pattern_str)?;
+    let info = ProcessInfo::internal(s!("MilesMorales.exe"))?;
+    Ok(ProcessScanner::scan(info, pattern))
 }
 
 pub fn option_ptr<T>(ptr: *const T) -> Option<*const T> {

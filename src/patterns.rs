@@ -19,5 +19,8 @@ pub(crate) const SCALEFORM_OPENFILE_DISC:       &'static str = "48 89 5C 24 ?? 4
 
 pub(crate) const KEYBIND_CREATEKEYBIND:         &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 83 EC 70 48 8B 05 ?? ?? ?? ?? 8B F2";
 pub(crate) const KEYBIND_REGISTERKEYBINDS:      &'static str = "48 89 5C 24 ?? 57 48 83 EC 40 E8";
+/// Mid function patterns
+pub(crate) const KEYBIND_GETKEYBINDCATEGORY:    &'static str = "E8 ** ** ** ** 48 8B C8 C6 44 24 ?? 01 41 B1 01";
+pub(crate) const KEYBIND_GETKEYBINDID:          &'static str = "E8 ** ** ** ** 4C 8B 17 45 33 C9 C7 44 24 ?? 00 00 00 00 45 33 C0 C7 44 24 ?? FF FF FF FF 48 8B D0 C7 44 24 ?? FF FF FF FF 48 8B CF";
 
 pub(crate) const NX_INIT:                       &'static str = "48 83 EC 28 48 83 3D ?? ?? ?? ?? 00 74 ?? 32 C0";
