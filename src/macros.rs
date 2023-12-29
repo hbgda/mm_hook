@@ -203,3 +203,24 @@ macro_rules! init_mod {
         const MOD_INFO: $crate::ModInfo = $crate::ModInfo { title: $name, version: $version, author: $author };
     };
 }
+
+#[macro_export]
+macro_rules! create_keybinds {
+    ($($group:literal => [$(($name:literal, $desc:literal, $prim_kc:expr, $sec_kc:expr, $locked:literal, $event:expr)),+]),+) => {
+        {
+            let mut bind_manager = $crate::keybinds::KeybindManager::new();
+            $(
+                bind_manager.set_category($group.to_string());
+                $(
+                    bind_manager.add_keybind(
+                        $name.to_string(), $desc.to_string(),
+                        $prim_kc, $sec_kc,
+                        $locked,
+                        $event 
+                    );
+                )*
+            )*
+            bind_manager
+        }
+    };
+}

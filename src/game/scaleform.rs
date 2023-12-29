@@ -18,3 +18,8 @@ pub unsafe fn load_custom(path: &str) -> Option<*const ()> {
     SCALEFORM_CACHE.insert(path.into(), sf);
     Some(sf)
 }
+
+scan_func_static!(patterns::SCALEFORM_INVOKE, SCALEFORM_INVOKE(*const (), *const u8, u32, u32, *mut u64, u32, u32, u32) -> u32);
+pub unsafe fn invoke(sf: *const (), func: &str, ret: &mut u64) -> u32 {
+    SCALEFORM_INVOKE(sf, func.as_ptr(), 0, 0, ret, 0, 0, 0)
+}

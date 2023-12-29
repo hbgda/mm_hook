@@ -16,6 +16,7 @@ pub(crate) const HUD_GETHUD:                    &'static str = "83 F9 01 77 ?? 4
 
 pub(crate) const SCALEFORMLOADER_OPENFILE:      &'static str = "48 89 5C 24 ?? 57 48 81 EC 40 02 00 00 48 8B FA";
 pub(crate) const SCALEFORM_OPENFILE_DISC:       &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC 30 33 DB 41 8B E8";
+pub(crate) const SCALEFORM_INVOKE:              &'static str = "48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 57 41 54 41 55 41 56 41 57 48 81 EC 60 02 00 00";
 
 pub(crate) const KEYBIND_CREATEKEYBIND:         &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 83 EC 70 48 8B 05 ?? ?? ?? ?? 8B F2";
 pub(crate) const KEYBIND_REGISTERKEYBINDS:      &'static str = "48 89 5C 24 ?? 57 48 83 EC 40 E8";

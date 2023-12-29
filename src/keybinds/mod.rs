@@ -80,11 +80,24 @@ pub struct KeybindManager {
 }
 
 impl KeybindManager {
-    pub unsafe fn new(category_title: String) -> KeybindManager {
+    pub unsafe fn new() -> KeybindManager {
         KeybindManager { 
             binds: Vec::new(),
-            category_group: register_category(category_title)
+            category_group: 0 // register_category(category_title)
         }
+    }
+
+    pub unsafe fn with_category(cat: String) -> KeybindManager {
+        KeybindManager {
+            binds: Vec::new(),
+            category_group: register_category(cat)
+        }
+    }
+
+    pub unsafe fn set_category(&mut self, cat: String) -> u32 {
+        let group = register_category(cat);
+        self.category_group = group;
+        group
     }
 
     pub unsafe fn add_keybind(
