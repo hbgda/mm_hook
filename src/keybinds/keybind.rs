@@ -8,7 +8,7 @@ pub struct Keybind {
     pub group: u32,
     pub name: *const u8,
     pub description: *const u8,
-    _0x28: u32,
+    pub preview_video_cfg: *const u8,
     _0x2c: u32
 }
 

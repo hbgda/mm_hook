@@ -9,6 +9,7 @@ pub(crate) const ASSETS_GETMANAGERBYASSETTYPE:  &'static str = "33 C0 81 F9 86 F
 pub(crate) const ASSETS_LOADASSET:              &'static str = "48 89 54 24 ?? 53 56 57 41 55 41 56 48 83 EC 50 48 8B DA";
 
 pub(crate) const HUD_CREATEMESSAGE:             &'static str = "48 8B C4 48 89 58 ?? 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC 30 05 00 00";
+pub(crate) const HUD_ADDNEWMESSAGE:             &'static str = "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 4C 89 64 24 ?? 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC C0 00 00 00 49 8B F9";
 pub(crate) const HUD_CLEARMESSAGE:              &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 57 48 81 EC 90 00 00 00";
 pub(crate) const HUD_CREATEPLAYERHUD:           &'static str = "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 4C 24 ?? 57 48 83 EC 30 48 63 DA";
 pub(crate) const HUD_HIDEHUD:                   &'static str = "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 0F 57 C0 41 0F B6 F0 0F 2F D8";
@@ -25,3 +26,4 @@ pub(crate) const KEYBIND_GETKEYBINDCATEGORY:    &'static str = "E8 ** ** ** ** 4
 pub(crate) const KEYBIND_GETKEYBINDID:          &'static str = "E8 ** ** ** ** 4C 8B 17 45 33 C9 C7 44 24 ?? 00 00 00 00 45 33 C0 C7 44 24 ?? FF FF FF FF 48 8B D0 C7 44 24 ?? FF FF FF FF 48 8B CF";
 
 pub(crate) const NX_INIT:                       &'static str = "48 83 EC 28 48 83 3D ?? ?? ?? ?? 00 74 ?? 32 C0";
+pub(crate) const NX_GETNXACTIONS:               &'static str = "E8 ** ** ** ** 33 D2 C7 44 24 ?? E8 03 00 00 4C 8D 0D";

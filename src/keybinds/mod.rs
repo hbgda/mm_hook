@@ -11,6 +11,7 @@ use self::keybind::{Keybind, KeyCode, KeybindState};
 
 scan_func_static!(crate::patterns::KEYBIND_CREATEKEYBIND, CREATE_KEYBIND(*const (), u32, u32, *const u8, u32, u32) -> *const Keybind);
 
+#[derive(Debug)]
 pub struct PartialBind {
     idx: u32,
     name: *const u8,
@@ -70,7 +71,7 @@ struct KeybindData {
     pub idx: u32,
     pub name: String,
     pub desc: String,
-    pub event: fn(&KeybindState),
+    pub event: unsafe fn(&KeybindState),
     pub was_pressed: bool
 }
 
@@ -107,7 +108,7 @@ impl KeybindManager {
         primary: KeyCode, 
         secondary: Option<KeyCode>, 
         locked: bool,
-        event: fn(&KeybindState)
+        event: unsafe fn(&KeybindState)
     ) {
         let name = format!("{name}\0");
         let desc = format!("{desc}\0");

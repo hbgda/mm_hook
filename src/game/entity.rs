@@ -2,7 +2,7 @@ use std::{ffi::CStr, str::Utf8Error};
 
 use crate::scan_func_static;
 
-use super::transform::Transform;
+use super::{transform::Transform, component::{ComponentEntry, Component}};
 
 scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u64) -> *const Entity);
 
@@ -24,24 +24,6 @@ pub unsafe fn get_entity_mut<'l>(handle_ptr: *const u64) -> Option<&'l mut Entit
     Some(&mut *entity)
 }
 
-// Entity Structure
-// 0x68: ComponentList
-// 0x70: ComponentListLen
-// 0xB0 = EntityName
-
-#[repr(C)]
-pub struct Register {
-    _pad: [u8; 0x60],
-    pub name: *const u8
-}
-
-#[repr(C)]
-#[derive(Debug, Clone)]
-pub struct ComponentEntry {
-    pub register: *const Register,
-    pub component: *const ()
-}
-
 #[repr(C)]
 #[derive(Debug)]
 pub struct Entity {
@@ -50,12 +32,15 @@ pub struct Entity {
     component_list: *const [ComponentEntry; 0],
     component_count: u16,
     _pad1: [u8; 0x38],
-    name: *const u8
+    name: *const i8
 }
 
 impl Entity {
-    pub unsafe fn get_name(&self) -> Result<&str, Utf8Error> {
-        CStr::from_ptr(self.name as *const i8).to_str()
+    pub unsafe fn get_name(&self) -> Option<&str> {
+        if let Ok(name) = CStr::from_ptr(self.name).to_str() {
+            return Some(name)
+        }
+        None
     }
     
     pub unsafe fn get_components_sized(&self) -> Vec<&ComponentEntry> {
@@ -65,36 +50,52 @@ impl Entity {
             .collect()
     }
 
+    pub unsafe fn get_components_sized_mut(&mut self) -> Vec<&mut ComponentEntry> {
+        (0..self.component_count as usize)
+            .into_iter()
+            .map(|i| (&mut *(self.component_list as *mut [ComponentEntry; 0])).get_unchecked_mut(i))
+            .collect()
+    }
+
     pub unsafe fn get_components(&self) -> &[ComponentEntry] {
         (&*self.component_list) as &[_]
     }
 
-    pub unsafe fn get_component_by_name(&self, name: &str) -> Option<*const ()> {
+    pub unsafe fn get_components_mut(&mut self) -> &mut [ComponentEntry] {
+        (&mut *(self.component_list as *mut [_; 0])) as &mut [_]
+    }
+
+    pub unsafe fn get_component_entry(&self, name: &str) -> Option<*const ComponentEntry> {
         let component_list = self.get_components();
         for i in 0..self.component_count as usize {
             let entry = component_list.get_unchecked(i);
-            let entry_name = CStr::from_ptr((*entry.register).name as *const i8)
-                .to_str()
-                .expect(&format!("Failed to read name for component: {:#p}", entry.component));
+            let entry_name = entry.info()?.get_name()?;
             if entry_name == name {
-                return Some(entry.component)
+                return Some(entry)
             }
         }
         None
     }
 
-    pub unsafe fn get_component<T>(&self, name: &str) -> Option<&T> {
-        Some(&*(self.get_component_by_name(name)? as *const T))
+    pub unsafe fn get_component<T: Component>(&self) -> Option<&T> {
+        (&*(
+            self.get_component_entry(T::NAME)?
+        )).component()
     }
 
-    pub unsafe fn get_component_mut<T>(&mut self, name: &str) -> Option<&mut T> {
-        Some(&mut *(self.get_component_by_name(name)? as *mut T))
+    pub unsafe fn get_component_mut<T: Component>(&mut self) -> Option<&mut T> {
+        (&mut *(
+            self.get_component_entry(T::NAME)? as *mut ComponentEntry
+        )).component_mut()
     }
 
-    // TODO: Maybe
-    // pub unsafe fn get_component<T: Component>() -> Option<&T> {
-    //     todo!()
-    // }
+    pub unsafe fn get_component_by_name(&mut self, name: &str) -> Option<*const ()> {
+        Some(
+            (&*(
+                self.get_component_entry(name)?
+            )).component_ptr
+        )
+    }
 
     pub unsafe fn get_transform(&self) -> &Transform {
         &*self.transform

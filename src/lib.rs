@@ -7,6 +7,15 @@ pub mod keybinds;
 pub mod settings;
 pub mod overrides;
 
+pub mod impls {
+    pub mod component {
+        pub use {
+            mm_hook_macros::Component,
+            crate::game::component::Component
+        };
+    }
+}
+
 pub use {
     windows::{s, Win32::{
         UI::{
@@ -23,7 +32,8 @@ pub use {
     once_cell::sync::Lazy,
     paste::paste,
     retour::GenericDetour,
-    canny
+    canny,
+    mm_hook_macros as proc_macros
 };
 
 #[repr(C)]
@@ -35,10 +45,5 @@ pub struct ModInfo {
 }
 
 pub unsafe fn init() {
-    // game::hud::HOOK_HUD_CreatePlayerHUD_Intercept.enable()
-    //     .expect("Failed to enable hook: PlayerHUD::Init()");
-
-    // overrides::init_scaleform();
-    
     keybinds::hooks::enable();
 }

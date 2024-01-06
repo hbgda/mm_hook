@@ -224,3 +224,40 @@ macro_rules! create_keybinds {
         }
     };
 }
+
+/// TODO: Probably turn this into a proc-macro so the offsets arent such a pain
+/// 
+/// IMPORTANT: 
+/// The offset of a field must be relative to the previous taking into account size of type.
+/// 
+/// e.g. 
+/// 
+/// Given `max_health: f32` at 0x80 and `current_health: f32` at 0x88,
+/// offset for `current_health` must be `0x88 - 0x80 - sizeof(f32)` = 0x4
+/// 
+/// ```
+/// native_component!(
+///     HeroHealth {
+///         [0x80] max_health: f32,
+///         [0x04] current_health: f32
+///     }
+/// )
+/// ```
+#[macro_export]
+macro_rules! native_component {
+    ($name:ident { $([$off:literal] $field:ident: $type:ty),* } ) => {
+        $crate::paste! {
+            #[repr(C)]
+            pub struct $name {
+                $(
+                    [<_ $off>]: [u8; $off],
+                    pub $field: $type,
+                )*
+            }
+        }
+
+        impl $crate::game::component::Component for $name {
+            const NAME: &'static str = stringify!($name);
+        }
+    };
+}

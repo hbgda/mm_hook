@@ -1,0 +1,14 @@
+[package]
+name = "mm_hook_macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "mm_hook_macros"
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+quote = "*"
+syn = { version = "*", features = ["extra-traits"] }
+proc-macro2 = "*"

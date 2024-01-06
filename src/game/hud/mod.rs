@@ -1,4 +1,4 @@
-use crate::{intercept_static, scan_func_static, utils, patterns};
+use crate::{scan_func_static, utils, patterns};
 
 pub mod message;
 
@@ -13,31 +13,31 @@ pub mod message;
 #[repr(C)]
 pub struct PlayerHUD {
     _0x0: [u8; 0x18F],
-    hud_ammo: *const (),
-    hud_reticule: *const (),
-    hud_message: *const (),
-    hud_poi: *const (),
-    hud_progress_bar: *const (),
-    hud_quick_select: *const (),
-    hud_health: *const (),
-    hud_app: *const (),
-    hud_target_lock: *const (),
-    hud_interact_button: *const (),
-    hud_activities: *const (),
-    hud_qte: *const (),
-    hud_spider_assault: *const (),
-    hud_combo_meter: *const (),
-    hud_countdown: *const (),
-    hud_mission: *const (),
-    hud_counter: *const (),
-    hud_inventory: *const (),
-    hud_pip_clue: *const (),
-    hud_placeable_button_prompt: *const (),
-    hud_communicator: *const (),
-    hud_eavesdrop_monitor: *const (),
-    hud_photo_mode: *const (),
-    hud_prowler_collectible: *const (),
-    hud_map: *const ()
+    pub hud_ammo: *const (),
+    pub hud_reticule: *const (),
+    pub hud_message: *const (),
+    pub hud_poi: *const (),
+    pub hud_progress_bar: *const (),
+    pub hud_quick_select: *const (),
+    pub hud_health: *const (),
+    pub hud_app: *const (),
+    pub hud_target_lock: *const (),
+    pub hud_interact_button: *const (),
+    pub hud_activities: *const (),
+    pub hud_qte: *const (),
+    pub hud_spider_assault: *const (),
+    pub hud_combo_meter: *const (),
+    pub hud_countdown: *const (),
+    pub hud_mission: *const (),
+    pub hud_counter: *const (),
+    pub hud_inventory: *const (),
+    pub hud_pip_clue: *const (),
+    pub hud_placeable_button_prompt: *const (),
+    pub hud_communicator: *const (),
+    pub hud_eavesdrop_monitor: *const (),
+    pub hud_photo_mode: *const (),
+    pub hud_prowler_collectible: *const (),
+    pub hud_map: *const ()
 }
 
 scan_func_static!(patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));

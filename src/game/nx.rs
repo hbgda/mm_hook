@@ -1,27 +1,13 @@
-use crate::make_func_static;
+use once_cell::sync::Lazy;
 
-make_func_static!(0x21AB870, GET_NX_ACTIONS() -> *const ());
+use crate::{make_func_static, utils, make_func, patterns};
+
+const GET_NX_ACTIONS_ADDR: Lazy<usize> = Lazy::new(|| unsafe {
+    let mut scanner = utils::create_scanner(patterns::NX_GETNXACTIONS).unwrap();
+    let found = scanner.next().unwrap();
+    let offset = i32::from_le_bytes(scanner.store[0..4].try_into().unwrap());
+    (found as isize + 5 + offset as isize) as usize
+});
 pub unsafe fn get_nx_actions() -> *const () {
-    GET_NX_ACTIONS()
+    make_func!(*GET_NX_ACTIONS_ADDR, () -> *const ())()
 }
-
-// static mut NX_INSTANCE: *const () = std::ptr::null();
-// pub unsafe fn get_instance() -> Option<*const ()> {
-//     if NX_INSTANCE.is_null() {
-//         return None
-//     }
-//     Some(NX_INSTANCE)
-// }
-
-// Aint work idk
-// make_hook!(
-//     HOOK_Nx_Init,
-//     crate::utils::scan(crate::patterns::NX_INIT).unwrap(),
-//     (p1: *const ()) -> u32 {
-//         let ret = HOOK_Nx_Init.call(p1);
-//         asm!("
-//         mov {}, rcx
-//         ", out(reg) NX_INSTANCE);
-//         ret
-//     }
-// );
