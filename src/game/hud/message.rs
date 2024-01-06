@@ -1,9 +1,28 @@
-use std::{time::Duration, sync::atomic::AtomicUsize};
+use crate::{scan_func_static, patterns, logging::Logger};
 
-use crate::{scan_func_static, patterns, utils, make_func_static, message_box, logging::Logger};
+scan_func_static!(patterns::HUD_CREATEMESSAGE, ADD_MESSAGE(*const PlayerHudMessage, u8, *const u8, f32, u32, u32, bool, bool) -> bool);
+scan_func_static!(patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const PlayerHudMessage, u8, *const u8, bool) -> bool);
 
-use super::get_hud;
+pub struct PlayerHudMessage;
 
+impl PlayerHudMessage {
+    pub unsafe fn add_message(&self, msg_type: MessageType, text: &str, duration: Option<f32>) -> bool {
+        let duration = match duration {
+            Some(dur) => dur,
+            None => 0.0
+        };
+        
+        let msg_type_u8 = msg_type.into();
+        Logger::sys_log(format!("PlayerHudMessage::AddMessage({msg_type_u8}, {text}, {duration})"));
+        ADD_MESSAGE(self, msg_type_u8, text.as_ptr(), duration, 0, 0, false, true)
+    }
+
+    pub unsafe fn clear_message(&self, msg_type: MessageType) -> bool {
+        let msg_type_u8 = msg_type.into();
+        Logger::sys_log(format!("PlayerHudMessage::ClearMessage({msg_type_u8})"));
+        CLEAR_MESSAGE(self, msg_type_u8, std::ptr::null(), false)
+    }
+}
 /*
 fn ShowNotification(phm, style, label, subtitle, unk, unk, unk, delay, duration?, unk)
 */
@@ -29,35 +48,19 @@ fn ShowNotification(phm, style, label, subtitle, unk, unk, unk, delay, duration?
 //     MaxHpUp = 18
 // }
 
-scan_func_static!(patterns::HUD_CREATEMESSAGE, CREATE_MESSAGE(*const (), u32, *const u8, u32, u32, u32, u8, u8) -> u64);
-scan_func_static!(patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const (), u32, *const u8, u32) -> u32);
-
-pub unsafe fn show_message(message: &'static str, message_type: MessageType, duration: Option<Duration>) {
-    create_message(message, message_type.clone());
-    if let Some(duration) = duration {
-        std::thread::spawn(move || {
-            std::thread::sleep(duration);
-            clear_message(message, message_type);
-        });
-    }
-}
-
-pub unsafe fn create_message(message: &'static str, message_type: MessageType) -> u64 {
-    let hud = &*get_hud().unwrap();
-    CREATE_MESSAGE(hud.hud_message, message_type as u32, message.as_ptr(), 0, 0, 0, 0, 1)
-}
-
-pub unsafe fn clear_message(message: &'static str, message_type: MessageType) {
-    let hud = &*get_hud().unwrap();
-    CLEAR_MESSAGE(hud.hud_message, message_type as u32, message.as_ptr(), 0);
-}
-
-#[derive(Clone)]
+#[repr(u8)]
+#[derive(Clone, Copy)]
 pub enum MessageType {
-    LeftCenter = 3,         // 3
+    LeftCenter = 3,          // 3
     BottomLeft = 11,         // 11
     CenterLower = 14,        // 14
     CenterBox = 17,          // 17
     CenterUpper = 18,        // 18
     LeftBox = 20,            // 20
+}
+
+impl Into<u8> for MessageType {
+    fn into(self) -> u8 {
+        self as u8
+    }
 }

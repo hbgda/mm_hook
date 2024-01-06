@@ -1,21 +1,15 @@
 use crate::{scan_func_static, utils, patterns};
 
-pub mod message;
+use self::message::PlayerHudMessage;
 
-// intercept_static!(
-//     PLAYER_HUD: *const PlayerHUD,
-//     HOOK_HUD_CreatePlayerHUD_Intercept,
-//     utils::scan(crate::patterns::HUD_CREATEPLAYERHUD).unwrap(),
-//     [ hud ]
-//     (hud: *const PlayerHUD, unk: i32) -> *const PlayerHUD
-// );
+pub mod message;
 
 #[repr(C)]
 pub struct PlayerHUD {
     _0x0: [u8; 0x18F],
     pub hud_ammo: *const (),
     pub hud_reticule: *const (),
-    pub hud_message: *const (),
+    pub hud_message: *const PlayerHudMessage,
     pub hud_poi: *const (),
     pub hud_progress_bar: *const (),
     pub hud_quick_select: *const (),
@@ -48,6 +42,10 @@ pub unsafe fn get_hud<'l>() -> Option<&'l PlayerHUD> {
 }
 
 impl PlayerHUD {
+    pub unsafe fn message(&self) -> Option<&PlayerHudMessage> {
+        Some(&*utils::option_ptr(self.hud_message)?)
+    }
+
     pub unsafe fn hide(&self, u0: u32, u1: u32, u2: f32) {
         HIDE_HUD(self, u0, u1, u2);
     }

@@ -261,3 +261,39 @@ macro_rules! native_component {
         }
     };
 }
+
+/// For classes with intact VFTables
+#[macro_export]
+macro_rules! native_class {
+    ($vis:vis $for:ident {
+        $( $field_vis:vis $field:ident : $field_ty:ty, )*
+        :[impl]
+        $( fn $fn:ident ( $($arg:ident: $arg_ty:ty),* ) -> $ret:ty; )*
+    }) => {
+        $crate::paste! {
+            #[allow(non_camel_case_types)]
+            struct [<$for _vftable>] {
+                $(
+                    $fn: fn(&$for, $($arg_ty),*) -> $ret,
+                )*
+            }
+
+            $vis struct $for {
+                _vft: *const [<$for _vftable>],
+                $(
+                    #[allow(dead_code)]
+                    $field_vis $field : $field_ty,
+                )*
+            }
+
+            #[allow(dead_code)]
+            impl $for {
+                $(
+                    pub unsafe fn $fn (&self, $($arg : $arg_ty),*) -> $ret {
+                        ((&*self._vft).$fn)(self, $($arg),*)
+                    }
+                )*
+            }
+        }
+    };
+}
