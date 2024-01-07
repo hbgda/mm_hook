@@ -4,10 +4,10 @@ use crate::scan_func_static;
 
 use super::{transform::Transform, component::{ComponentEntry, Component}};
 
-scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u64) -> *const Entity);
+scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u32) -> *const Entity);
 
-pub unsafe fn get_entity<'l>(handle_ptr: *const u64) -> Option<&'l Entity> {
-    let entity = GET_ENTITY(handle_ptr);
+pub unsafe fn get_entity<'l>(handle: &u32) -> Option<&'l Entity> {
+    let entity = GET_ENTITY(handle);
     if entity == std::ptr::null() {
         return None;
     }
@@ -15,8 +15,8 @@ pub unsafe fn get_entity<'l>(handle_ptr: *const u64) -> Option<&'l Entity> {
     Some(&*entity)
 }
 
-pub unsafe fn get_entity_mut<'l>(handle_ptr: *const u64) -> Option<&'l mut Entity> {
-    let entity = GET_ENTITY(handle_ptr) as *mut Entity;
+pub unsafe fn get_entity_mut<'l>(handle: &u32) -> Option<&'l mut Entity> {
+    let entity = GET_ENTITY(handle) as *mut Entity;
     if entity == std::ptr::null_mut() {
         return None;
     }

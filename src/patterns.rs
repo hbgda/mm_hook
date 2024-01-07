@@ -27,3 +27,5 @@ pub(crate) const KEYBIND_GETKEYBINDID:          &'static str = "E8 ** ** ** ** 4
 
 pub(crate) const NX_INIT:                       &'static str = "48 83 EC 28 48 83 3D ?? ?? ?? ?? 00 74 ?? 32 C0";
 pub(crate) const NX_GETNXACTIONS:               &'static str = "E8 ** ** ** ** 33 D2 C7 44 24 ?? E8 03 00 00 4C 8D 0D";
+
+pub(crate) const HEROSYSTEM_OFFSET:             &'static str = "48 89 05 ** ** ** ** 48 89 35";
