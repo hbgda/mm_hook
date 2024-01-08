@@ -1,8 +1,10 @@
 pub(crate) const ENTITY_GETENTITY:              &'static str = "44 8B 01 41 8B D0 C1 EA 14 81 E2 FF 07 00 00 74 ?? 41 81 E0 FF FF 0F 00 4B 8D 0C ?? 48 C1 E1 06 48 03 0D ?? ?? ?? ?? 44 3B 05 ?? ?? ?? ?? 73 ?? 0F B7 41 ?? 3B D0 74";
+pub(crate) const ENTITY_SPAWNENTITY:            &'static str = "40 53 48 83 EC 50 48 8B DA 48 8B D1 48 8D 0D";
 
 pub(crate) const TRANSFORM_SETPOSITION:         &'static str = "0F 10 51 ?? 4C 8B C1";
 pub(crate) const TRANSFORM_SETSCALE:            &'static str = "40 53 48 81 EC 80 00 00 00 F2 0F 10 02";
 
+pub(crate) const ASSETS_CREATEASSETHASH:        &'static str = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B DA 48 8B F9 48 85 D2 74 ?? 80 3A 00";
 pub(crate) const ASSETS_HASHSTRING:             &'static str = "40 53 48 83 EC 20 48 8B C2 48 8B D9 48 85 D2 74 ?? 80 3A 00 74 ?? 48 BA 42 0F 87 D7 95 57 6C C9";
 pub(crate) const ASSETS_GETASSETMANAGER:        &'static str = "48 0F BE C1 48 8D 0D ?? ?? ?? ?? 48 8B 04 ?? C3";
 pub(crate) const ASSETS_GETMANAGERBYASSETTYPE:  &'static str = "33 C0 81 F9 86 FE 08 72";

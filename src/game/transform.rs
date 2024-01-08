@@ -28,8 +28,8 @@ impl Transform {
         SET_POSITION(self, new_pos);
     }
 
-    pub fn get_position(&self) -> Vector3 {
-        self.position
+    pub fn get_position(&self) -> &Vector3 {
+        &self.position
     }
 
     pub unsafe fn set_scale(&mut self, new_scale: &Vector3) {

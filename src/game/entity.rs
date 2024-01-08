@@ -1,10 +1,17 @@
 use std::{ffi::CStr, str::Utf8Error};
 
-use crate::scan_func_static;
+use crate::{scan_func_static, utils};
 
 use super::{transform::Transform, component::{ComponentEntry, Component}};
 
 scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u32) -> *const Entity);
+scan_func_static!(crate::patterns::ENTITY_SPAWNENTITY, SPAWN_ENTITY(u64, *const ()) -> *const Entity);
+
+/// Not sure fully what 2nd param is but it dictates position,
+/// can use pointer to player transform to spawn on player
+pub unsafe fn spawn_entity(actor_hash: u64, pos: *const ()) -> Option<*const Entity> {
+    utils::option_ptr(SPAWN_ENTITY(actor_hash, pos))
+}
 
 pub unsafe fn get_entity<'l>(handle: &u32) -> Option<&'l Entity> {
     let entity = GET_ENTITY(handle);
