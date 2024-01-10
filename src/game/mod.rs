@@ -1,5 +1,5 @@
 pub mod hero;
-pub mod entity;
+pub mod actor;
 pub mod hud;
 pub mod transform;
 pub mod nx;

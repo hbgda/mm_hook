@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 
 use crate::{utils::{get_offset_ptr, self}, patterns};
 
-use super::entity::{Entity, self};
+use super::actor::{self, Actor};
 
 const HEROSYSTEM: Lazy<Option<*const HeroSystem>> = Lazy::new(|| unsafe {
     let mut scanner = match utils::create_scanner(patterns::HEROSYSTEM_OFFSET) {
@@ -37,11 +37,11 @@ impl HeroSystem {
         )
     }
 
-    pub unsafe fn get_hero(&self) -> Option<&Entity> {
-        entity::get_entity(&self.hero_handle)
+    pub unsafe fn get_hero(&self) -> Option<&Actor> {
+        actor::get_actor(&self.hero_handle)
     }
 
-    pub unsafe fn get_hero_mut(&mut self) -> Option<&mut Entity> {
-        entity::get_entity_mut(&self.hero_handle)
+    pub unsafe fn get_hero_mut(&mut self) -> Option<&mut Actor> {
+        actor::get_actor_mut(&self.hero_handle)
     }
 }

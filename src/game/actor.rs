@@ -4,36 +4,37 @@ use crate::{scan_func_static, utils};
 
 use super::{transform::Transform, component::{ComponentEntry, Component}};
 
-scan_func_static!(crate::patterns::ENTITY_GETENTITY, GET_ENTITY(*const u32) -> *const Entity);
-scan_func_static!(crate::patterns::ENTITY_SPAWNENTITY, SPAWN_ENTITY(u64, *const ()) -> *const Entity);
+scan_func_static!(crate::patterns::ACTOR_GETACTOR, GET_ACTOR(*const u32) -> *const Actor);
+scan_func_static!(crate::patterns::ACTOR_SPAWNACTOR, SPAWN_ACTOR(u64, *const ()) -> *const Actor);
+scan_func_static!(crate::patterns::ACTOR_ENABLE, ENABLE_ACTOR(*const Actor));
 
 /// Not sure fully what 2nd param is but it dictates position,
 /// can use pointer to player transform to spawn on player
-pub unsafe fn spawn_entity(actor_hash: u64, pos: *const ()) -> Option<*const Entity> {
-    utils::option_ptr(SPAWN_ENTITY(actor_hash, pos))
+pub unsafe fn spawn_actor(actor_hash: u64, pos: *const ()) -> Option<*const Actor> {
+    utils::option_ptr(SPAWN_ACTOR(actor_hash, pos))
 }
 
-pub unsafe fn get_entity<'l>(handle: &u32) -> Option<&'l Entity> {
-    let entity = GET_ENTITY(handle);
-    if entity == std::ptr::null() {
+pub unsafe fn get_actor<'l>(handle: &u32) -> Option<&'l Actor> {
+    let actor = GET_ACTOR(handle);
+    if actor == std::ptr::null() {
         return None;
     }
 
-    Some(&*entity)
+    Some(&*actor)
 }
 
-pub unsafe fn get_entity_mut<'l>(handle: &u32) -> Option<&'l mut Entity> {
-    let entity = GET_ENTITY(handle) as *mut Entity;
-    if entity == std::ptr::null_mut() {
+pub unsafe fn get_actor_mut<'l>(handle: &u32) -> Option<&'l mut Actor> {
+    let actor = GET_ACTOR(handle) as *mut Actor;
+    if actor == std::ptr::null_mut() {
         return None;
     }
 
-    Some(&mut *entity)
+    Some(&mut *actor)
 }
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct Entity {
+pub struct Actor {
     transform: *const Transform,
     _pad: [u8; 0x60],
     component_list: *const [ComponentEntry; 0],
@@ -42,7 +43,11 @@ pub struct Entity {
     name: *const i8
 }
 
-impl Entity {
+impl Actor {
+    pub unsafe fn enable(&self) {
+        ENABLE_ACTOR(self)
+    }
+
     pub unsafe fn get_name(&self) -> Option<&str> {
         if let Ok(name) = CStr::from_ptr(self.name).to_str() {
             return Some(name)
@@ -104,11 +109,11 @@ impl Entity {
         )
     }
 
-    pub unsafe fn get_transform(&self) -> &Transform {
+    pub unsafe fn transform(&self) -> &Transform {
         &*self.transform
     }
 
-    pub unsafe fn get_transform_mut(&mut self) -> &mut Transform {
+    pub unsafe fn transform_mut(&mut self) -> &mut Transform {
         &mut *(self.transform as *mut Transform)
     }
 
