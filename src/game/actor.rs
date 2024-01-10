@@ -2,34 +2,22 @@ use std::{ffi::CStr, str::Utf8Error};
 
 use crate::{scan_func_static, utils};
 
-use super::{transform::Transform, component::{ComponentEntry, Component}};
+use super::{transform::{Transform, SpatialData, Vector3}, component::{ComponentEntry, Component}};
 
 scan_func_static!(crate::patterns::ACTOR_GETACTOR, GET_ACTOR(*const u32) -> *const Actor);
-scan_func_static!(crate::patterns::ACTOR_SPAWNACTOR, SPAWN_ACTOR(u64, *const ()) -> *const Actor);
+scan_func_static!(crate::patterns::ACTOR_SPAWNACTOR, SPAWN_ACTOR(u64, *const SpatialData) -> *const Actor);
 scan_func_static!(crate::patterns::ACTOR_ENABLE, ENABLE_ACTOR(*const Actor));
 
-/// Not sure fully what 2nd param is but it dictates position,
-/// can use pointer to player transform to spawn on player
-pub unsafe fn spawn_actor(actor_hash: u64, pos: *const ()) -> Option<*const Actor> {
-    utils::option_ptr(SPAWN_ACTOR(actor_hash, pos))
-}
-
 pub unsafe fn get_actor<'l>(handle: &u32) -> Option<&'l Actor> {
-    let actor = GET_ACTOR(handle);
-    if actor == std::ptr::null() {
-        return None;
-    }
-
-    Some(&*actor)
+    Some(
+        &*(utils::option_ptr(
+            GET_ACTOR(handle)
+        )?)
+    )
 }
 
 pub unsafe fn get_actor_mut<'l>(handle: &u32) -> Option<&'l mut Actor> {
-    let actor = GET_ACTOR(handle) as *mut Actor;
-    if actor == std::ptr::null_mut() {
-        return None;
-    }
-
-    Some(&mut *actor)
+    Some(get_actor(handle)?.as_mut())
 }
 
 #[repr(C)]
@@ -44,6 +32,22 @@ pub struct Actor {
 }
 
 impl Actor {
+    pub unsafe fn as_mut(&self) -> &mut Actor {
+        &mut *(self as *const Actor as *mut Actor)
+    }
+
+    pub unsafe fn spawn_at_pos<'l>(actor_hash: u64, pos: Vector3) -> Option<&'l Actor> {
+        Actor::spawn(actor_hash, SpatialData::from_pos(pos))
+    }
+
+    pub unsafe fn spawn<'l>(actor_hash: u64, spatial_data: SpatialData) -> Option<&'l Actor> {
+        Some(
+            &*(utils::option_ptr(
+                SPAWN_ACTOR(actor_hash, &spatial_data)
+            )?)
+        )
+    }
+
     pub unsafe fn enable(&self) {
         ENABLE_ACTOR(self)
     }

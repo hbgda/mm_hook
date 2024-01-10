@@ -38,9 +38,13 @@ impl Asset {
     }
 }
 
-scan_func_static!(patterns::ASSETS_CREATEASSETHASH, CREATE_ASSET_ID(*mut (), *const u8) -> *const ());
-pub unsafe fn create_asset_hash(out: *mut (), path: &str) -> *const ()  {
-    CREATE_ASSET_ID(out, format!("{path}\0").as_ptr())
+// Not positive what the difference between these two functions are but they both create asset hashes ?
+
+scan_func_static!(patterns::ASSETS_CREATEASSETHASH, CREATE_ASSET_ID(*mut u64, *const u8) -> *const u64);
+pub unsafe fn create_asset_hash(path: &str) -> u64  {
+    let mut hash = 0u64;
+    CREATE_ASSET_ID(&mut hash, format!("{path}\0").as_ptr());
+    hash
 }
 
 scan_func_static!(patterns::ASSETS_HASHSTRING, HASH_STRING(*mut u64, *const u8) -> *const u64);
@@ -50,10 +54,3 @@ pub unsafe fn hash_string(asset_string: &str) -> u64 {
     hash
 }
 
-// LOAD_ASSET(asset_manager, hash, unknown, asset_path, unknown, unknown, unknown)
-scan_func_static!(patterns::ASSETS_LOADASSET, LOAD_ASSET(*const (), u64, u64, *const u8, u64, u64, u64) -> *const Asset);
-pub unsafe fn load_asset<'l>(asset_manager: *const (), hash: u64) -> Option<&'l Asset> {
-    Some(&*utils::option_ptr(
-        LOAD_ASSET(asset_manager, hash, 0, std::ptr::null(), 0, 0, 0)
-    )?)
-}
