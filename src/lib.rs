@@ -45,5 +45,6 @@ pub struct ModInfo {
 }
 
 pub unsafe fn init() {
+    overrides::init_scaleform();
     keybinds::hooks::enable();
 }

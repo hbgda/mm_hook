@@ -1,8 +1,14 @@
 #[repr(C)]
+pub struct UISettingsMenuSystem {
+    _0x0: [u8; 0x20],
+    pub system_menu_cfg: *const UISystemMenuConfig
+}
+
+#[repr(C)]
 pub struct UISystemMenuConfig {
     _0x0: [u8; 0x5F],
     /// 0x60
-    pub item_list: *const [UISystemMenuItem; 8],
+    pub item_list: *const [UISystemMenuItem; 0],
     /// 0x68
     pub item_count: u32,
 }
@@ -30,8 +36,7 @@ pub struct UISystemMenu {
 pub struct UISystemMenuItem {
     vftable: *const (),
     /// 0x8
-    /// Somehow dictates the result of clicking the menu item
-    pub number: u8,
+    pub id: u8,
     /// 0x10
     pub title: *const u8,
     _pad1: [u8; 0x12],

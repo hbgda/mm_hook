@@ -37,6 +37,10 @@ impl HeroSystem {
         )
     }
 
+    pub unsafe fn hero_handle(&self) -> u32 {
+        self.hero_handle
+    }
+
     pub unsafe fn get_hero(&self) -> Option<&Actor> {
         actor::get_actor(&self.hero_handle)
     }

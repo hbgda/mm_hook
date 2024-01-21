@@ -24,7 +24,10 @@ pub unsafe fn get_actor_mut<'l>(handle: &u32) -> Option<&'l mut Actor> {
 #[derive(Debug)]
 pub struct Actor {
     transform: *const Transform,
-    _pad: [u8; 0x60],
+    _0x8: u32,
+    _handle_part: u32,
+    _handle_part_2: u16,
+    _0x12: [u8; 0x56],
     component_list: *const [ComponentEntry; 0],
     component_count: u16,
     _pad1: [u8; 0x38],
@@ -57,6 +60,11 @@ impl Actor {
             return Some(name)
         }
         None
+    }
+
+    // ???
+    pub unsafe fn handle(&self) -> u32 {
+        ((self._handle_part_2 as u32) << 0x14) | self._handle_part
     }
     
     pub unsafe fn get_components_sized(&self) -> Vec<&ComponentEntry> {

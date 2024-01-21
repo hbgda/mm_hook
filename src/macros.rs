@@ -51,11 +51,11 @@ macro_rules! make_func_static {
 
 #[macro_export]
 macro_rules! scan_func_static {
-    ($pattern:expr, $name:ident ($($params:ty),*)) => {
-        $crate::scan_func_static!($pattern, $name($($params),*) -> ());
+    ($pattern:expr, $vis:vis $name:ident ($($params:ty),*)) => {
+        $crate::scan_func_static!($pattern, $vis $name($($params),*) -> ());
     };
-    ($pattern:expr, $name:ident ($($params:ty),*) -> $ret:ty) => {
-        static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::scan_func!($pattern, ($($params),*) -> $ret) });
+    ($pattern:expr, $vis:vis $name:ident ($($params:ty),*) -> $ret:ty) => {
+        $vis static $name: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::scan_func!($pattern, ($($params),*) -> $ret) });
     };
 }
 
