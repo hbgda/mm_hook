@@ -1,12 +1,25 @@
-use std::{ffi::CStr, str::Utf8Error};
+use std::ffi::CStr;
 
-use crate::{scan_func_static, utils};
+use crate::{declare_native_func, patterns, utils};
 
 use super::{transform::{Transform, SpatialData, Vector3}, component::{ComponentEntry, Component}};
 
-scan_func_static!(crate::patterns::ACTOR_GETACTOR, GET_ACTOR(*const u32) -> *const Actor);
-scan_func_static!(crate::patterns::ACTOR_SPAWNACTOR, SPAWN_ACTOR(u64, *const SpatialData) -> *const Actor);
-scan_func_static!(crate::patterns::ACTOR_ENABLE, ENABLE_ACTOR(*const Actor));
+declare_native_func!(
+    utils::scan(patterns::ACTOR_GETACTOR).unwrap(),
+    GET_ACTOR(*const u32) -> *const Actor
+);
+declare_native_func!(
+    utils::scan(patterns::ACTOR_SPAWNACTOR).unwrap(),
+    SPAWN_ACTOR(u64, *const SpatialData) -> *const Actor
+);
+declare_native_func!(
+    utils::scan(patterns::ACTOR_ENABLE).unwrap(),
+    ENABLE_ACTOR(*const Actor)
+);
+
+// scan_func_static!(crate::patterns::ACTOR_GETACTOR, GET_ACTOR(*const u32) -> *const Actor);
+// scan_func_static!(crate::patterns::ACTOR_SPAWNACTOR, SPAWN_ACTOR(u64, *const SpatialData) -> *const Actor);
+// scan_func_static!(crate::patterns::ACTOR_ENABLE, ENABLE_ACTOR(*const Actor));
 
 pub unsafe fn get_actor<'l>(handle: &u32) -> Option<&'l Actor> {
     Some(

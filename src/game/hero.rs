@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 
-use crate::{utils::{get_offset_ptr, self}, patterns};
+use crate::{patterns, utils};
 
 use super::actor::{self, Actor};
 

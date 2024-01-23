@@ -1,5 +1,17 @@
 use std::ffi::CStr;
 
+use crate::{declare_native_func, patterns, utils};
+
+declare_native_func!(
+    utils::scan_func_call(patterns::SF_VALUE_CREATEARRAY).unwrap(),
+    VALUE_CREATE_ARRAY(*const (), *mut Value)
+);
+
+declare_native_func!(
+    utils::scan_func_call(patterns::SF_VALUE_CREATEOBJECT).unwrap(),
+    VALUE_CREATE_OBJECT(*const (), *mut Value, *const u8)
+);
+
 #[repr(C)]
 pub struct Value {
     _unk_ptr_1: *const (),
@@ -16,14 +28,17 @@ struct ValueInterface {
     pub fn_2: *const (),
     pub fn_3: *const (),
     pub fn_4: *const (),
-    // GetMember(?, self.data, member, result)
+    // 0x20 GetMember(?, self.data, member, result)
     pub get_member: fn(*const (), *const (), *const u8, *mut Value) -> bool,
-    // SetMember(?, self.data, member, new)
+    // 0x28 SetMember(?, self.data, member, new)
     pub set_member: fn(*const (), *mut (), *const u8, *const Value) -> bool,
-    // Invoke(?, self.data, result, method, args, num_args)
+    // 0x30 Invoke(?, self.data, result, method, args, num_args)
     pub invoke:     fn(*const (), *const (), *mut Value, *const u8, *const Value, u32) -> bool,
-    _0x38: [u8; 0x110],
-    // AttachMovie(?, self.data, result, symbol_name, instance_name, depth, init_args)
+    _0x38: [u8; 0x40],
+    // 0x78 PushBack(?, self.data, value)
+    pub push_back:  fn(*const (), *const (), *const Value) -> bool,
+    _0x80: [u8; 0xC8],
+    // 0x148 AttachMovie(?, self.data, result, symbol_name, instance_name, depth, init_args)
     pub attach_movie: fn(*const (), *const (), *mut Value, *const u8, *const u8, i32, *const ()) -> bool
 }
 
@@ -65,7 +80,7 @@ impl Value {
         None
     }
 
-    pub unsafe fn set_member(&mut self, member: &str, new_val: *const Value) -> bool {
+    pub unsafe fn set_member(&mut self, member: &str, new_val: &Value) -> bool {
         let interface = match self.interface() {
             Some(interface) => interface,
             None => return false 
@@ -98,6 +113,24 @@ impl Value {
     pub fn set_uint(&mut self, v: u32) { self.set_type(ValueType::UInt); self.data.uint = v }
     pub fn set_number(&mut self, v: f64) { self.set_type(ValueType::Number); self.data.number = v }
     pub fn set_string(&mut self, v: &str) { self.set_type(ValueType::String); self.data.string = v.as_ptr() as *const i8 }
+}
+
+impl Value {
+    pub unsafe fn create_array() -> Value {
+        let mut value = Value::alloc();
+        VALUE_CREATE_ARRAY(std::ptr::null(), &mut value);
+        value
+    }
+
+    pub unsafe fn create_object() -> Value {
+        Value::create_object_of_type("Object\0")
+    }
+
+    pub unsafe fn create_object_of_type(type_name: &str) -> Value {
+        let mut value = Value::alloc();
+        VALUE_CREATE_OBJECT(std::ptr::null(), &mut value, type_name.as_ptr());
+        value
+    }
 }
 
 impl From<bool> for Value {

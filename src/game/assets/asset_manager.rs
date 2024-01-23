@@ -1,10 +1,23 @@
-use crate::{scan_func_static, utils, patterns};
+use crate::{declare_native_func, patterns, scan_func_static, utils};
 
 use super::Asset;
 
-scan_func_static!(patterns::ASSETS_GETASSETMANAGER, GET_ASSET_MANAGER(u8) -> *const ());
-scan_func_static!(patterns::ASSETS_LOADASSET, pub(crate) LOAD_ASSET(*const (), u64, u64, *const u8, u64, u64, u64) -> *const Asset);
-scan_func_static!(patterns::ASSETS_GETMANAGERBYASSETTYPE, GET_MANAGER_BY_ASSET_TYPE(u32) -> *const ());
+declare_native_func!(
+    utils::scan(patterns::ASSETS_GETASSETMANAGER).unwrap(),
+    GET_ASSET_MANAGER(u8) -> *const ()
+);
+declare_native_func!(
+    utils::scan(patterns::ASSETS_LOADASSET).unwrap(),
+    LOAD_ASSET(*const (), u64, u64, *const u8, u64, u64, u64) -> *const Asset
+);
+declare_native_func!(
+    utils::scan(patterns::ASSETS_GETMANAGERBYASSETTYPE).unwrap(),
+    GET_MANAGER_BY_ASSET_TYPE(u32) -> *const ()
+);
+
+// scan_func_static!(patterns::ASSETS_GETASSETMANAGER, GET_ASSET_MANAGER(u8) -> *const ());
+// scan_func_static!(patterns::ASSETS_LOADASSET, pub(crate) LOAD_ASSET(*const (), u64, u64, *const u8, u64, u64, u64) -> *const Asset);
+// scan_func_static!(patterns::ASSETS_GETMANAGERBYASSETTYPE, GET_MANAGER_BY_ASSET_TYPE(u32) -> *const ());
 
 #[derive(Clone, Copy)]
 pub enum AssetManager {

@@ -23,6 +23,9 @@ pub(crate) const SCALEFORM_OPENFILE_DISC:       &'static str = "48 89 5C 24 ?? 4
 // pub(crate) const SCALEFORM_INVOKE:              &'static str = "48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 57 41 54 41 55 41 56 41 57 48 81 EC 60 02 00 00";
 pub(crate) const SCALEFORM_INVOKE:              &'static str = "40 53 48 83 EC 40 8B 42 ?? 49 8B D9";
 
+pub(crate) const SF_VALUE_CREATEOBJECT:         &'static str = "E8 ** ** ** ** 66 0F 6F 05 ?? ?? ?? ?? F3 0F 7F 45 ?? 33 F6 48 89 75 00";
+pub(crate) const SF_VALUE_CREATEARRAY:          &'static str = "E8 ** ** ** ** 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8D 78";
+
 pub(crate) const KEYBIND_CREATEKEYBIND:         &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 83 EC 70 48 8B 05 ?? ?? ?? ?? 8B F2";
 pub(crate) const KEYBIND_REGISTERKEYBINDS:      &'static str = "48 89 5C 24 ?? 57 48 83 EC 40 E8";
 

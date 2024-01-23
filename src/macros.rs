@@ -60,6 +60,16 @@ macro_rules! scan_func_static {
 }
 
 #[macro_export]
+macro_rules! declare_native_func {
+    ($addr:expr, $vis:vis $ident:ident ($($params:ty),*)) => {
+        $crate::declare_native_func!($addr, $vis $ident ($($params),*) -> ());
+    };
+    ($addr:expr, $vis:vis $ident:ident ($($params:ty),*) -> $ret:ty) => {
+        $vis static $ident: $crate::Lazy<unsafe extern "system" fn($($params,)*) -> $ret> = $crate::Lazy::new(|| unsafe { $crate::make_func!($addr, ($($params),*) -> $ret) });
+    };
+}
+
+#[macro_export]
 macro_rules! make_hook {
     ($id:ident, $addr:expr, ($($param:ident: $type:ty),*) $code:block) => {
         $crate::make_hook!($id, $addr, ($($param: $type),*) -> () $code);

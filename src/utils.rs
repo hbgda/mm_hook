@@ -33,6 +33,13 @@ pub unsafe fn create_scanner(pattern_str: &'static str) -> Result<ProcessScanner
     Ok(ProcessScanner::scan(info, pattern))
 }
 
+pub unsafe fn scan_func_call(pattern: &'static str) -> Result<*const (), Box<dyn Error>> {
+    let mut scanner = create_scanner(pattern).unwrap();
+    let found = scanner.next().unwrap();
+    let offset = i32::from_le_bytes(scanner.store[0..4].try_into().unwrap());
+    Ok((found as isize + 5 + offset as isize) as *const ())
+}
+
 pub fn option_ptr<T>(ptr: *const T) -> Option<*const T> {
     if ptr.is_null() {
         return None

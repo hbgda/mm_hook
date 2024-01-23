@@ -1,7 +1,16 @@
-use crate::{scan_func_static, patterns, logging::Logger};
+use crate::{declare_native_func, logging::Logger, patterns, utils};
 
-scan_func_static!(patterns::HUD_CREATEMESSAGE, ADD_MESSAGE(*const PlayerHudMessage, u8, *const u8, f32, u32, u32, bool, bool) -> bool);
-scan_func_static!(patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const PlayerHudMessage, u8, *const u8, bool) -> bool);
+declare_native_func!(
+    utils::scan(patterns::HUD_CREATEMESSAGE).unwrap(),
+    ADD_MESSAGE(*const PlayerHudMessage, u8, *const u8, f32, u32, u32, bool, bool) -> bool
+);
+declare_native_func!(
+    utils::scan(patterns::HUD_CLEARMESSAGE).unwrap(),
+    CLEAR_MESSAGE(*const PlayerHudMessage, u8, *const u8, bool) -> bool
+);
+
+// scan_func_static!(patterns::HUD_CREATEMESSAGE, ADD_MESSAGE(*const PlayerHudMessage, u8, *const u8, f32, u32, u32, bool, bool) -> bool);
+// scan_func_static!(patterns::HUD_CLEARMESSAGE, CLEAR_MESSAGE(*const PlayerHudMessage, u8, *const u8, bool) -> bool);
 
 pub struct PlayerHudMessage;
 

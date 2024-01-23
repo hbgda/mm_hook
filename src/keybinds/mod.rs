@@ -5,11 +5,16 @@ use std::collections::HashMap;
 
 use once_cell::sync::Lazy;
 
-use crate::scan_func_static;
+use crate::{declare_native_func, patterns, utils};
 
 use self::keybind::{Keybind, KeyCode, KeybindState};
 
-scan_func_static!(crate::patterns::KEYBIND_CREATEKEYBIND, CREATE_KEYBIND(*const (), u32, u32, *const u8, u32, u32) -> *const Keybind);
+declare_native_func!(
+    utils::scan(patterns::KEYBIND_CREATEKEYBIND).unwrap(),
+    CREATE_KEYBIND(*const (), u32, u32, *const u8, u32, u32) -> *const Keybind
+);
+
+// scan_func_static!(crate::patterns::KEYBIND_CREATEKEYBIND, CREATE_KEYBIND(*const (), u32, u32, *const u8, u32, u32) -> *const Keybind);
 
 #[derive(Debug)]
 pub struct PartialBind {

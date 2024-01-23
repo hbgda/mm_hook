@@ -1,4 +1,13 @@
-use crate::{scan_func_static, patterns};
+use crate::{declare_native_func, patterns, utils};
+
+declare_native_func!(
+    utils::scan(patterns::TRANSFORM_SETPOSITION).unwrap(),
+    SET_POSITION(*mut Transform, *const Vector3)
+);
+declare_native_func!(
+    utils::scan(patterns::TRANSFORM_SETSCALE).unwrap(),
+    SET_SCALE(*mut Transform, *const Vector3)
+);
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -29,8 +38,8 @@ pub struct Transform {
     spatial_data: SpatialData
 }
 
-scan_func_static!(patterns::TRANSFORM_SETPOSITION, SET_POSITION(*mut Transform, *const Vector3));
-scan_func_static!(patterns::TRANSFORM_SETSCALE, SET_SCALE(*mut Transform, *const Vector3));
+// scan_func_static!(patterns::TRANSFORM_SETPOSITION, SET_POSITION(*mut Transform, *const Vector3));
+// scan_func_static!(patterns::TRANSFORM_SETSCALE, SET_SCALE(*mut Transform, *const Vector3));
 
 impl Transform {
     pub fn spatial_data(&self) -> &SpatialData {

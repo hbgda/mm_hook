@@ -1,8 +1,13 @@
-use crate::{scan_func_static, utils, patterns};
+use crate::{declare_native_func, patterns, utils};
 
 use self::message::PlayerHudMessage;
 
 pub mod message;
+
+declare_native_func!(
+    utils::scan(patterns::HUD_GETHUD).unwrap(),
+    GETHUD(u32) -> *const PlayerHUD
+);
 
 #[repr(C)]
 pub struct PlayerHUD {
@@ -34,8 +39,8 @@ pub struct PlayerHUD {
     pub hud_map: *const ()
 }
 
-scan_func_static!(patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));
-scan_func_static!(patterns::HUD_GETHUD, GETHUD(u32) -> *const PlayerHUD);
+// scan_func_static!(patterns::HUD_HIDEHUD, HIDE_HUD(*const PlayerHUD, u32, u32, f32));
+// scan_func_static!(patterns::HUD_GETHUD, GETHUD(u32) -> *const PlayerHUD);
 
 pub unsafe fn get_hud<'l>() -> Option<&'l PlayerHUD> {
     Some(&*utils::option_ptr(GETHUD(0))?)
@@ -46,7 +51,7 @@ impl PlayerHUD {
         Some(&*utils::option_ptr(self.hud_message)?)
     }
 
-    pub unsafe fn hide(&self, u0: u32, u1: u32, u2: f32) {
-        HIDE_HUD(self, u0, u1, u2);
-    }
+    // pub unsafe fn hide(&self, u0: u32, u1: u32, u2: f32) {
+    //     HIDE_HUD(self, u0, u1, u2);
+    // }
 }

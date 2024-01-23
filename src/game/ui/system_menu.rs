@@ -47,6 +47,6 @@ pub struct UISystemMenuItem {
     pub image: *const u8,
     _pad3: [u8; 0x10],
     /// 0x68
-    pub option_type_cmd: *const (),
+    pub option_type: *const (),
     _pad4: [u8; 0x38],
 }

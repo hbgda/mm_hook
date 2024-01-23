@@ -1,25 +1,17 @@
 use std::{ffi::CStr, path::Path};
-use crate::{make_hook, utils, patterns, logging::Logger, game::{scaleform, assets::{hash_string, Asset}}};
+use crate::{make_hook, utils, patterns, logging::Logger, game::scaleform};
 
-static mut CACHED: Vec<u64> = Vec::new();
 make_hook!(
     HOOK_ScaleformLoader_OpenFile,
     utils::scan(patterns::SCALEFORMLOADER_OPENFILE).unwrap(),
     (this: *const (), path: *const i8) -> *const () {
         if let Ok(path_str) = CStr::from_ptr(path).to_str() {
-            // let hash = hash_string(path_str);
-            // if CACHED.contains(&hash) {
-            //     Logger::sys_log(format!("Cached scaleform: {hash:#X}"));
-            //     return HOOK_ScaleformLoader_OpenFile.call(this, path);
-            // }
-
             if let Some(idx) = path_str.find("export") {
                 let check_path = &path_str[idx + 6..];
                 let file_path = format!("./mods/assets/scaleform/{}", check_path.replace("\\", "/").trim_start_matches("/"));
                 if Path::new(&file_path).exists() {
                     if let Some(sf) = scaleform::load_custom(&file_path) {
                         Logger::sys_log(format!("custom scaleform: {file_path} -> {:#X}", sf as usize));
-                        // CACHED.push(hash);
                         return sf
                     }
                 }

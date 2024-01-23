@@ -4,7 +4,12 @@ use std::{time::Duration};
 
 pub use asset_manager::*;
 
-use crate::{scan_func_static, patterns, utils, logging::Logger};
+use crate::{declare_native_func, logging::Logger, patterns, utils};
+
+declare_native_func!(
+    utils::scan(patterns::ASSETS_HASHSTRING).unwrap(),
+    HASH_STRING(*mut u64, *const u8) -> *const u64
+);
 
 #[allow(dead_code)]
 #[repr(C)]
@@ -40,14 +45,14 @@ impl Asset {
 
 // Not positive what the difference between these two functions are but they both create asset hashes ?
 
-scan_func_static!(patterns::ASSETS_CREATEASSETHASH, CREATE_ASSET_ID(*mut u64, *const u8) -> *const u64);
-pub unsafe fn create_asset_hash(path: &str) -> u64  {
-    let mut hash = 0u64;
-    CREATE_ASSET_ID(&mut hash, format!("{path}\0").as_ptr());
-    hash
-}
+// scan_func_static!(patterns::ASSETS_CREATEASSETHASH, CREATE_ASSET_ID(*mut u64, *const u8) -> *const u64);
+// pub unsafe fn create_asset_hash(path: &str) -> u64  {
+//     let mut hash = 0u64;
+//     CREATE_ASSET_ID(&mut hash, format!("{path}\0").as_ptr());
+//     hash
+// }
 
-scan_func_static!(patterns::ASSETS_HASHSTRING, HASH_STRING(*mut u64, *const u8) -> *const u64);
+// scan_func_static!(patterns::ASSETS_HASHSTRING, HASH_STRING(*mut u64, *const u8) -> *const u64);
 pub unsafe fn hash_string(asset_string: &str) -> u64 {
     let mut hash = 0u64;
     HASH_STRING(&mut hash, format!("{asset_string}\0").as_ptr());
