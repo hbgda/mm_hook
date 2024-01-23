@@ -2,7 +2,8 @@ use std::ffi::CStr;
 
 #[repr(C)]
 pub struct Value {
-    _0x0: [u8; 0x10],
+    _unk_ptr_1: *const (),
+    _unk_ptr_2: *const (),
     interface: *const *const ValueInterface,
     value_type: ValueType,
     data: ValueDataUnion,
@@ -15,23 +16,22 @@ struct ValueInterface {
     pub fn_2: *const (),
     pub fn_3: *const (),
     pub fn_4: *const (),
-    // GetMember(self, member, result)
-    pub get_member: fn(*const Value, *const u8, *mut Value, bool) -> bool,
-    // SetMember(self, member, new)
-    pub set_member: fn(*mut Value, *const u8, *const Value, bool) -> bool,
-    // Invoke(self, method, result, args, num_args)
-    pub invoke:     fn(*const Value, *const u8, *mut Value, *const Value, u32, bool) -> bool,
+    // GetMember(?, self.data, member, result)
+    pub get_member: fn(*const (), *const (), *const u8, *mut Value) -> bool,
+    // SetMember(?, self.data, member, new)
+    pub set_member: fn(*const (), *mut (), *const u8, *const Value) -> bool,
+    // Invoke(?, self.data, result, method, args, num_args)
+    pub invoke:     fn(*const (), *const (), *mut Value, *const u8, *const Value, u32) -> bool,
     _0x38: [u8; 0x110],
-    // // Assuming this is AttachMovie based on strings in the function, but unsure
-    // // Ghidra shows this function as having 6 args (excluding self) but docs say 5, so idk ??
-    // // AttachMovie(self, result, symbol_name, instance_name, depth, init_args)
-    // pub attach_movie: fn(*const Value, *mut Value, *const u8, *const u8, i32, *const ()) -> bool,
+    // AttachMovie(?, self.data, result, symbol_name, instance_name, depth, init_args)
+    pub attach_movie: fn(*const (), *const (), *mut Value, *const u8, *const u8, i32, *const ()) -> bool
 }
 
 impl Value {
-    pub const fn alloc() -> Value {
+    const fn alloc() -> Value {
         Value {
-            _0x0: [0u8; 0x10],
+            _unk_ptr_1: std::ptr::null(),
+            _unk_ptr_2: std::ptr::null(),
             interface: std::ptr::null(),
             value_type: ValueType::Undefined,
             data: ValueDataUnion { bool: false },
@@ -39,61 +39,109 @@ impl Value {
         }
     }
 
-    unsafe fn interface(&self) -> &ValueInterface {
-        &**self.interface
+    unsafe fn interface(&self) -> Option<&ValueInterface> {
+        if !self.interface.is_null() {
+            return Some(&**self.interface)
+        }
+        None
     }
 
-    pub unsafe fn is_managed(&self) -> bool {
+    pub fn is_managed(&self) -> bool {
         self.value_type as u8 & ValueTypeControl::ManagedBit as u8 != 0
     }
 
-    pub unsafe fn get_type(&self) -> ValueType {
-        std::mem::transmute(self.value_type as u8 & ValueTypeControl::TypeMask as u8)
+    pub fn get_type(&self) -> ValueType {
+        unsafe {
+            std::mem::transmute(self.value_type as u8 & ValueTypeControl::TypeMask as u8)
+        }
     }
 
     pub unsafe fn get_member(&self, member: &str, ) -> Option<Value> {
         let mut out = Value::alloc();
-        let interface = self.interface();
-        if (interface.get_member)(self, format!("{member}\0").as_ptr(), &mut out, self.is_managed()) {
+        let interface = self.interface()?;
+        if (interface.get_member)(self.interface as *const (), self.get_data(), format!("{member}\0").as_ptr(), &mut out) {
             return Some(out)
         }
         None
     }
 
     pub unsafe fn set_member(&mut self, member: &str, new_val: *const Value) -> bool {
-        let interface = self.interface();
-        (interface.set_member)(self, format!("{member}\0").as_ptr(), new_val, self.is_managed())
+        let interface = match self.interface() {
+            Some(interface) => interface,
+            None => return false 
+        };
+        (interface.set_member)(self.interface as *const (), self.get_data() as *mut (), format!("{member}\0").as_ptr(), new_val)
     }
 
-    pub unsafe fn get_data(&self) -> *const () { self.data.object }
-    pub unsafe fn get_bool(&self) -> bool { self.data.bool }
-    pub unsafe fn get_int(&self) -> i32  { self.data.int }
-    pub unsafe fn get_uint(&self) -> u32  { self.data.uint }
-    pub unsafe fn get_number(&self) -> f64 { self.data.number }
-    pub unsafe fn get_string(&self) -> Option<&str> { 
+    pub fn get_data(&self) -> *const () { unsafe { self.data.object } }
+    pub fn get_bool(&self) -> bool { unsafe { self.data.bool } }
+    pub fn get_int(&self) -> i32  { unsafe { self.data.int } }
+    pub fn get_uint(&self) -> u32  { unsafe { self.data.uint } }
+    pub fn get_number(&self) -> f64 { unsafe { self.data.number } }
+    pub fn get_string(&self) -> Option<&str> { 
         let str_ptr = if self.is_managed() {
-            *self.data.managed_string
+            unsafe { *self.data.managed_string }
         }
         else {
-            self.data.string
+            unsafe { self.data.string }
         };
 
-        if let Ok(string) = CStr::from_ptr(str_ptr).to_str() {
+        if let Ok(string) = unsafe { CStr::from_ptr(str_ptr) }.to_str() {
             return Some(string)
         }
         None
     }
     
-    unsafe fn set_type(&mut self, t: ValueType) { self.value_type = t }
-    pub unsafe fn set_bool(&mut self, v: bool) { self.set_type(ValueType::Boolean); self.data.bool = v }
-    pub unsafe fn set_int(&mut self, v: i32) { self.set_type(ValueType::Int); self.data.int = v }
-    pub unsafe fn set_uint(&mut self, v: u32) { self.set_type(ValueType::UInt); self.data.uint = v }
-    pub unsafe fn set_number(&mut self, v: f64) { self.set_type(ValueType::Number); self.data.number = v }
-    pub unsafe fn set_string(&mut self, v: &str) { self.set_type(ValueType::String); self.data.string = v.as_ptr() as *const i8 }
+    fn set_type(&mut self, t: ValueType) { self.value_type = t }
+    pub fn set_bool(&mut self, v: bool) { self.set_type(ValueType::Boolean); self.data.bool = v }
+    pub fn set_int(&mut self, v: i32) { self.set_type(ValueType::Int); self.data.int = v }
+    pub fn set_uint(&mut self, v: u32) { self.set_type(ValueType::UInt); self.data.uint = v }
+    pub fn set_number(&mut self, v: f64) { self.set_type(ValueType::Number); self.data.number = v }
+    pub fn set_string(&mut self, v: &str) { self.set_type(ValueType::String); self.data.string = v.as_ptr() as *const i8 }
 }
 
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        let mut v = Value::alloc();
+        v.set_bool(value);
+        v
+    }
+}
+
+impl From<i32> for Value {
+    fn from(value: i32) -> Self {
+        let mut v = Value::alloc();
+        v.set_int(value);
+        v
+    }
+}
+
+impl From<u32> for Value {
+    fn from(value: u32) -> Self {
+        let mut v = Value::alloc();
+        v.set_uint(value);
+        v
+    }
+}
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        let mut v = Value::alloc();
+        v.set_number(value);
+        v
+    }
+}
+
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        let mut v = Value::alloc();
+        v.set_string(value);
+        v
+    }
+} 
+
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ValueType {
     Undefined,
     Null,
@@ -133,30 +181,31 @@ pub union ValueDataUnion {
     object: *const ()
 }
 
-pub trait IsValueType {
-    fn get_type() -> ValueType;
-}
+// Don't think any of this is necessary
+// pub trait IsValueType {
+//     fn get_type() -> ValueType;
+// }
 
-impl IsValueType for bool {
-    fn get_type() -> ValueType {
-        ValueType::Boolean
-    }
-}
+// impl IsValueType for bool {
+//     fn get_type() -> ValueType {
+//         ValueType::Boolean
+//     }
+// }
 
-impl IsValueType for i32 {
-    fn get_type() -> ValueType {
-        ValueType::Int
-    }
-}
+// impl IsValueType for i32 {
+//     fn get_type() -> ValueType {
+//         ValueType::Int
+//     }
+// }
 
-impl IsValueType for u32 {
-    fn get_type() -> ValueType {
-        ValueType::UInt
-    }
-}
+// impl IsValueType for u32 {
+//     fn get_type() -> ValueType {
+//         ValueType::UInt
+//     }
+// }
 
-impl IsValueType for &str {
-    fn get_type() -> ValueType {
-        ValueType::String
-    }
-}
+// impl IsValueType for &str {
+//     fn get_type() -> ValueType {
+//         ValueType::String
+//     }
+// }
