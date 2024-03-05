@@ -46,3 +46,9 @@ pub fn option_ptr<T>(ptr: *const T) -> Option<*const T> {
     }
     Some(ptr)
 }
+
+pub fn terminate_string(string: &mut String) {
+    if !string.ends_with('\0') {
+        string.push('\0');
+    }
+}

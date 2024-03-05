@@ -1,4 +1,4 @@
-use crate::{declare_native_func, patterns, scan_func_static, utils};
+use crate::{declare_native_func, patterns, utils};
 
 use super::Asset;
 

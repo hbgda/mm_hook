@@ -1,3 +1,8 @@
+// TODO: 
+// Crashes I assume because its writing past the size of the array internally
+// probably need to hijack it and replace the pointer with some new Vec
+
+
 pub mod keybind;
 pub mod hooks;
 

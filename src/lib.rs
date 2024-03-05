@@ -4,20 +4,12 @@ pub mod utils;
 pub mod logging;
 pub mod patterns;
 pub mod keybinds;
-pub mod settings;
 pub mod overrides;
+pub mod menu;
+pub mod hash;
 
-pub mod impls {
-    pub mod component {
-        pub use {
-            mm_hook_macros::Component,
-            crate::game::component::Component
-        };
-    }
-}
-
-pub use {
-    windows::{s, Win32::{
+pub mod windows {
+    pub use windows::{s, Win32::{
         UI::{
             WindowsAndMessaging::*,
             Input::KeyboardAndMouse::*
@@ -28,7 +20,9 @@ pub use {
             LibraryLoader::*,
             Console::* 
         }
-    }},
+    }};
+}
+pub use {
     once_cell::sync::Lazy,
     paste::paste,
     retour::GenericDetour,
@@ -47,4 +41,5 @@ pub struct ModInfo {
 pub unsafe fn init() {
     overrides::init_scaleform();
     keybinds::hooks::enable();
+    menu::hooks::enable();
 }

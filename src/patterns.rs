@@ -5,6 +5,8 @@ pub(crate) const ACTOR_ENABLE:                  &'static str = "48 89 5C 24 ?? 4
 pub(crate) const TRANSFORM_SETPOSITION:         &'static str = "0F 10 51 ?? 4C 8B C1";
 pub(crate) const TRANSFORM_SETSCALE:            &'static str = "40 53 48 81 EC 80 00 00 00 F2 0F 10 02";
 
+pub(crate) const GUI_HASH:                      &'static str = "0F BE 11 B8 05 15 00 00";
+
 pub(crate) const ASSETS_CREATEASSETHASH:        &'static str = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B DA 48 8B F9 48 85 D2 74 ?? 80 3A 00";
 pub(crate) const ASSETS_HASHSTRING:             &'static str = "40 53 48 83 EC 20 48 8B C2 48 8B D9 48 85 D2 74 ?? 80 3A 00 74 ?? 48 BA 42 0F 87 D7 95 57 6C C9";
 pub(crate) const ASSETS_GETASSETMANAGER:        &'static str = "48 0F BE C1 48 8D 0D ?? ?? ?? ?? 48 8B 04 ?? C3";
@@ -22,6 +24,9 @@ pub(crate) const SCALEFORMLOADER_OPENFILE:      &'static str = "48 89 5C 24 ?? 5
 pub(crate) const SCALEFORM_OPENFILE_DISC:       &'static str = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC 30 33 DB 41 8B E8";
 // pub(crate) const SCALEFORM_INVOKE:              &'static str = "48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 57 41 54 41 55 41 56 41 57 48 81 EC 60 02 00 00";
 pub(crate) const SCALEFORM_INVOKE:              &'static str = "40 53 48 83 EC 40 8B 42 ?? 49 8B D9";
+
+// pub(crate) const SF_EXTERNALINTERFACEHANDLER:   &'static str = "48 8B C4 48 89 58 ?? 48 89 70 ?? 48 89 78 ?? 4C 89 60 ?? 55 41 56 41 57 48 8D 68 ?? 48 81 EC 00 01 00 00";
+pub(crate) const EXTERNALINTERFACE_LOBBY:       &'static str = "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 4C 89 64 24 ?? 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC 10 01 00 00 45 8B F9";
 
 pub(crate) const SF_VALUE_CREATEOBJECT:         &'static str = "E8 ** ** ** ** 66 0F 6F 05 ?? ?? ?? ?? F3 0F 7F 45 ?? 33 F6 48 89 75 00";
 pub(crate) const SF_VALUE_CREATEARRAY:          &'static str = "E8 ** ** ** ** 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8D 78";

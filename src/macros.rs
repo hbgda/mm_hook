@@ -1,8 +1,15 @@
 #[macro_export]
+macro_rules! s {
+    ($str:literal) => {
+        concat!($str, "\0")
+    };
+}
+
+#[macro_export]
 macro_rules! message_box {
     ($title:expr, $content:expr, $style:expr) => {
         unsafe {
-            $crate::MessageBoxA($crate::HWND(0), $crate::s!($content), $crate::s!($title), $crate::MESSAGEBOX_STYLE($style))
+            $crate::windows::MessageBoxA($crate::windows::HWND(0), $crate::windows::s!($content), $crate::windows::s!($title), $crate::windows::MESSAGEBOX_STYLE($style))
         }
     };
 }
@@ -11,7 +18,7 @@ macro_rules! message_box {
 macro_rules! get_key {
     ($key:expr) => {
         unsafe {
-            $crate::GetAsyncKeyState($key) & 1 == 1
+            $crate::windows::GetAsyncKeyState($key) & 1 == 1
         }
     };
 }
@@ -171,12 +178,12 @@ macro_rules! load_library_func {
     };
     ($module:literal, $module_fn:literal, $fn:ident ($($ty:ty),*) -> $ret:ty) => {
         const $fn: $crate::Lazy<Option<extern "system" fn($($ty,)*)>> = $crate::Lazy::new(|| unsafe {
-            let handle = match $crate::GetModuleHandleA($crate::s!($module)) {
+            let handle = match $crate::windows::GetModuleHandleA($crate::windows::s!($module)) {
                 Ok(handle) => handle,
                 Err(_) => return None
             };
 
-            let func = match $crate::GetProcAddress(handle, $crate::s!($module_fn)) {
+            let func = match $crate::windows::GetProcAddress(handle, $crate::windows::s!($module_fn)) {
                 Some(func) => func,
                 None => return None
             };
@@ -203,10 +210,10 @@ macro_rules! init_mod {
     ($name:literal, $version:literal, $author:literal, $init:block) => {
         #[no_mangle]
         #[allow(non_snake_case)]
-        extern "system" fn DllMain(_module: $crate::HMODULE, call_reason: u32, _: *mut ()) {
+        extern "system" fn DllMain(_module: $crate::windows::HMODULE, call_reason: u32, _: *mut ()) {
             match call_reason {
-                $crate::DLL_PROCESS_ATTACH => $init,
-                _ => return,
+                $crate::windows::DLL_PROCESS_ATTACH => $init,
+                _ => (),
             };
         }
 
